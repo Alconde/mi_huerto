@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- CABECERA -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Rotación por Parcelas</h1>
+            <p class="text-muted mb-0">
+                Estado actual y siguiente propuesta para cada parcela del huerto
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'plan_rotaciones' %}" class="btn btn-outline-success">
+                Ver plan general
+            </a>
+        </div>
+    </div>
+
+    <!-- RESUMEN GENERAL -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-success shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Parcelas analizadas</h6>
+                    <h2 class="mb-0">{{ total_parcelas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-warning shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Con aviso de rotación</h6>
+                    <h2 class="mb-0">{{ parcelas_con_aviso }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-info shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Próximas leguminosas sugeridas</h6>
+                    <h2 class="mb-0">{{ parcelas_leguminosa }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LISTADO DE PARCELAS -->
+    <div class="row">
+        {% for item in parcelas_resumen %}
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+
+                <!-- CABECERA DE PARCELA -->
+                <div class="card-header d-flex justify-content-between align-items-center
+                    {% if item.estado_rotacion == 'ok' %}bg-success text-white
+                    {% elif item.estado_rotacion == 'aviso' %}bg-warning
+                    {% else %}bg-danger text-white{% endif %}">
+                    <div>
+                        <h5 class="mb-0">{{ item.parcela.nombre }}</h5>
+                        <small>
+                            Estado:
+                            {% if item.estado_rotacion == 'ok' %}
+                                Rotación correcta
+                            {% elif item.estado_rotacion == 'aviso' %}
+                                Revisar rotación
+                            {% else %}
+                                Repite familia / riesgo alto
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div>
+                        <a href="{% url 'detalle_parcela' item.parcela.id %}" class="btn btn-sm btn-light">
+                            Ver parcela
+                        </a>
+                    </div>
+                </div>
+
+                <!-- CUERPO -->
+                <div class="card-body">
+                    <div class="row">
+
+                        <!-- BLOQUE A -->
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h6>Cultivo predominante</h6>
+                                <p class="mb-1"><strong>{{ item.cultivo_predominante }}</strong></p>
+                                <p class="mb-0 text-muted">{{ item.familia_predominante }}</p>
+                            </div>
+                        </div>
+
+                        <!-- BLOQUE B -->
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h6>Lo que había antes</h6>
+                                <p class="mb-1"><strong>{{ item.cultivo_anterior|default:"Sin registro" }}</strong></p>
+                                <p class="mb-0 text-muted">{{ item.familia_anterior|default:"-" }}</p>
+                            </div>
+                        </div>
+
+                        <!-- BLOQUE C -->
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h6>Siguiente plantación</h6>
+                                <p class="mb-1"><strong>{{ item.siguiente_grupo }}</strong></p>
+                                <p class="mb-0 text-muted">{{ item.sugerencias }}</p>
+                            </div>
+                        </div>
+
+                        <!-- BLOQUE D -->
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h6>Observación</h6>
+                                <p class="mb-0">{{ item.observacion }}</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SEGUNDA FILA -->
+                    <div class="row mt-2">
+                        <div class="col-md-8 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h6>Familias presentes ahora</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for familia in item.familias_presentes %}
+                                    <span class="badge bg-secondary">{{ familia }}</span>
+                                    {% empty %}
+                                    <span class="text-muted">Sin datos</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h6>Acciones</h6>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'plan_rotaciones' %}" class="btn btn-success btn-sm">
+                                        Ver plan de rotación
+                                    </a>
+                                    <a href="{% url 'plano_huerto' %}" class="btn btn-outline-secondary btn-sm">
+                                        Ver plano
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

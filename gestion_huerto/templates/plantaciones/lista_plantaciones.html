@@ -1,0 +1,619 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+        color: #2f6f3e;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .page-subtitle {
+        color: #6b7280;
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 8px 20px rgba(17, 24, 39, 0.04);
+    }
+
+    .stat-label {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b7280;
+        margin-bottom: 0.35rem;
+    }
+
+    .stat-value {
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1;
+    }
+
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .filters-bar {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 16px;
+        padding: 0.85rem;
+        box-shadow: 0 8px 20px rgba(17, 24, 39, 0.04);
+    }
+
+    .filters-bar .nav-pills .nav-link {
+        border-radius: 999px;
+        color: #4b5563;
+        font-weight: 600;
+        padding: 0.45rem 0.9rem;
+        font-size: 0.9rem;
+    }
+
+    .filters-bar .nav-pills .nav-link.active {
+        background: #2f8f46;
+        color: #fff;
+    }
+
+    .view-toggle .btn {
+        border-radius: 999px;
+        padding: 0.45rem 0.9rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .view-toggle .btn-outline-secondary.active {
+        background: #2f6f3e;
+        color: #fff;
+        border-color: #2f6f3e;
+    }
+
+    .parcela-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 20px;
+        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+    }
+
+    .parcela-header {
+        padding: 0.85rem 1.2rem;
+        border-bottom: 1px solid #eef1f4;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        background: linear-gradient(to right, #f7fbf8, #ffffff);
+    }
+
+    .parcela-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #2f6f3e;
+        margin-bottom: 0.1rem;
+    }
+
+    .parcela-meta {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-bottom: 0;
+    }
+
+    .parcela-body {
+        padding: 0.8rem 1rem 0.4rem;
+    }
+
+    .tabla-parcela {
+        margin-bottom: 0.3rem;
+    }
+
+    .tabla-parcela thead {
+        background: #f7faf8;
+    }
+
+    .tabla-parcela th {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4b5563;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid #e5e7eb !important;
+        white-space: nowrap;
+    }
+
+    .tabla-parcela td {
+        font-size: 0.88rem;
+        vertical-align: middle;
+        padding-top: 0.4rem;
+        padding-bottom: 0.4rem;
+    }
+
+    .cultivo-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        white-space: nowrap;
+    }
+
+    .cultivo-cell span.emoji {
+        font-size: 1rem;
+    }
+
+    .estado-badge {
+        display: inline-block;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .entrada-badge {
+        display: inline-block;
+        padding: 0.18rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .entrada-directa {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .entrada-semillero {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .entrada-plantel {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .entrada-vacia {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .tabla-plantaciones {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
+        overflow: hidden;
+    }
+
+    .tabla-plantaciones thead {
+        background: #f7faf8;
+    }
+
+    .tabla-plantaciones th {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #4b5563;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid #e5e7eb !important;
+        white-space: nowrap;
+    }
+
+    .tabla-plantaciones td {
+        font-size: 0.9rem;
+        vertical-align: middle;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #6b7280;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 18px;
+    }
+
+    @media (max-width: 991.98px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .parcela-header {
+            align-items: flex-start;
+        }
+
+        .tabla-parcela,
+        .tabla-plantaciones {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">🌱 Mis Plantaciones</h1>
+        <p class="page-subtitle">
+            Vista general de todas las plantaciones; puedes cambiar entre vista compacta por parcela o tabla completa.
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'nueva_plantacion' %}" class="btn btn-success">
+            + Nueva plantación
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Plantaciones activas</div>
+        <div class="stat-value">{{ activas }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Registro total</div>
+        <div class="stat-value">{{ total_plantaciones }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Parcelas activas</div>
+        <div class="stat-value">{{ parcelas_activas }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">En cosecha</div>
+        <div class="stat-value">{{ en_cosecha }}</div>
+    </div>
+</div>
+
+<div class="toolbar">
+    <div class="filters-bar flex-grow-1">
+        <ul class="nav nav-pills flex-wrap">
+            <li class="nav-item me-1 mb-1">
+                <a class="nav-link {% if estado_actual == 'todas' %}active{% endif %}"
+                   href="{% url 'lista_plantaciones' %}?vista={{ vista_actual|default:'tarjetas' }}">
+                    Todas
+                </a>
+            </li>
+            <li class="nav-item me-1 mb-1">
+                <a class="nav-link {% if estado_actual == 'planificada' %}active{% endif %}"
+                   href="{% url 'lista_plantaciones' %}?estado=planificada&vista={{ vista_actual|default:'tarjetas' }}">
+                    Planificadas
+                </a>
+            </li>
+            <li class="nav-item me-1 mb-1">
+                <a class="nav-link {% if estado_actual == 'sembrada' %}active{% endif %}"
+                   href="{% url 'lista_plantaciones' %}?estado=sembrada&vista={{ vista_actual|default:'tarjetas' }}">
+                    Sembradas
+                </a>
+            </li>
+            <li class="nav-item me-1 mb-1">
+                <a class="nav-link {% if estado_actual == 'germinada' %}active{% endif %}"
+                   href="{% url 'lista_plantaciones' %}?estado=germinada&vista={{ vista_actual|default:'tarjetas' }}">
+                    Germinadas
+                </a>
+            </li>
+            <li class="nav-item me-1 mb-1">
+                <a class="nav-link {% if estado_actual == 'trasplantada' %}active{% endif %}"
+                   href="{% url 'lista_plantaciones' %}?estado=trasplantada&vista={{ vista_actual|default:'tarjetas' }}">
+                    Trasplantadas
+                </a>
+            </li>
+            <li class="nav-item me-1 mb-1">
+                <a class="nav-link {% if estado_actual == 'en_cultivo' %}active{% endif %}"
+                   href="{% url 'lista_plantaciones' %}?estado=en_cultivo&vista={{ vista_actual|default:'tarjetas' }}">
+                    En cultivo
+                </a>
+            </li>
+            <li class="nav-item me-1 mb-1">
+                <a class="nav-link {% if estado_actual == 'en_cosecha' %}active{% endif %}"
+                   href="{% url 'lista_plantaciones' %}?estado=en_cosecha&vista={{ vista_actual|default:'tarjetas' }}">
+                    En cosecha
+                </a>
+            </li>
+            <li class="nav-item me-1 mb-1">
+                <a class="nav-link {% if estado_actual == 'finalizada' %}active{% endif %}"
+                   href="{% url 'lista_plantaciones' %}?estado=finalizada&vista={{ vista_actual|default:'tarjetas' }}">
+                    Finalizadas
+                </a>
+            </li>
+            <li class="nav-item me-1 mb-1">
+                <a class="nav-link {% if estado_actual == 'perdida' %}active{% endif %}"
+                   href="{% url 'lista_plantaciones' %}?estado=perdida&vista={{ vista_actual|default:'tarjetas' }}">
+                    Perdidas
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="view-toggle">
+        <div class="btn-group" role="group" aria-label="Selector de vista">
+            <a href="{% url 'lista_plantaciones' %}?estado={{ estado_actual }}&vista=tarjetas"
+               class="btn btn-outline-secondary {% if vista_actual == 'tarjetas' or not vista_actual %}active{% endif %}">
+                Por parcela
+            </a>
+            <a href="{% url 'lista_plantaciones' %}?estado={{ estado_actual }}&vista=tabla"
+               class="btn btn-outline-secondary {% if vista_actual == 'tabla' %}active{% endif %}">
+                Tabla
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if parcelas_agrupadas %}
+    {% if vista_actual == 'tabla' %}
+        <div class="tabla-plantaciones">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Cultivo</th>
+                            <th>Parcela</th>
+                            <th>Variedad</th>
+                            <th>Cantidad</th>
+                            <th>Siembra</th>
+                            <th>Trasplante</th>
+                            <th>Entrada</th>
+                            <th>Recolección estimada</th>
+                            <th>Estado</th>
+                            <th>Semáforo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grupo in parcelas_agrupadas %}
+                            {% for plantacion in grupo.plantaciones %}
+                            <tr>
+                                <td>
+                                    <div class="cultivo-cell">
+                                        {% if plantacion.cultivo.emoji %}
+                                            <span class="emoji">{{ plantacion.cultivo.emoji }}</span>
+                                        {% endif %}
+                                        <span>{{ plantacion.cultivo.nombre }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ grupo.nombre }}</td>
+                                <td>
+                                    {% if plantacion.variedad %}
+                                        {{ plantacion.variedad.nombre }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ plantacion.cantidad|default:"-" }}</td>
+                                <td>
+                                    {% if plantacion.fecha_siembra %}
+                                        {{ plantacion.fecha_siembra|date:"d/m/Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if plantacion.fecha_trasplante %}
+                                        {{ plantacion.fecha_trasplante|date:"d/m/Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if plantacion.modo_implantacion %}
+                                        {% if plantacion.modo_implantacion == 'plantel' %}
+                                            <span class="entrada-badge entrada-plantel">Plantel</span>
+                                        {% elif plantacion.modo_implantacion == 'semillero' %}
+                                            <span class="entrada-badge entrada-semillero">Semillero</span>
+                                        {% elif plantacion.modo_implantacion == 'directa' %}
+                                            <span class="entrada-badge entrada-directa">Directa</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {# Fallback: deducir por tipo_siembra o fechas #}
+                                        {% if plantacion.tipo_siembra == 'semillero' and plantacion.fecha_trasplante %}
+                                            <span class="entrada-badge entrada-semillero">Semillero</span>
+                                        {% elif plantacion.fecha_trasplante and not plantacion.fecha_siembra %}
+                                            <span class="entrada-badge entrada-plantel">Plantel</span>
+                                        {% elif plantacion.fecha_siembra and not plantacion.fecha_trasplante %}
+                                            <span class="entrada-badge entrada-directa">Directa</span>
+                                        {% else %}
+                                            <span class="entrada-badge entrada-vacia">-</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if plantacion.fecha_recoleccion_inicio %}
+                                        {{ plantacion.fecha_recoleccion_inicio|date:"d/m/Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ plantacion.get_estado_display }}</td>
+                                <td>
+                                    <span class="estado-badge"
+                                          style="background-color: {{ plantacion.semaforo_estado_color }}; color: {{ plantacion.semaforo_estado_texto }};">
+                                        {{ plantacion.etiqueta_semaforo_estado }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'detalle_plantacion' plantacion.id %}"
+                                           class="btn btn-outline-primary">
+                                            Ver
+                                        </a>
+                                        <a href="{% url 'editar_plantacion' plantacion.id %}"
+                                           class="btn btn-success">
+                                            Editar
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        {% for grupo in parcelas_agrupadas %}
+        <div class="parcela-card">
+            <div class="parcela-header">
+                <div>
+                    <div class="parcela-title">📍 {{ grupo.nombre }}</div>
+                    <p class="parcela-meta">
+                        {{ grupo.plantaciones|length }} plantación{{ grupo.plantaciones|length|pluralize:"es" }}
+                        {% if grupo.parcela and grupo.parcela.tamano %}
+                            · {{ grupo.parcela.tamano }} m²
+                        {% endif %}
+                        {% if grupo.parcela and grupo.parcela.orientacion %}
+                            · {{ grupo.parcela.orientacion }}
+                        {% endif %}
+                    </p>
+                </div>
+                {% if grupo.parcela %}
+                <a href="{% url 'detalle_parcela' grupo.parcela.id %}" class="btn btn-outline-success btn-sm">
+                    Ver parcela
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="parcela-body">
+                <div class="table-responsive tabla-parcela">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Cultivo</th>
+                                <th>Variedad</th>
+                                <th>Estado</th>
+                                <th>Siembra</th>
+                                <th>Trasplante</th>
+                                <th>Entrada</th>
+                                <th>Recolección est.</th>
+                                <th>Cant.</th>
+                                <th>Semáforo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for plantacion in grupo.plantaciones %}
+                            <tr>
+                                <td>
+                                    <div class="cultivo-cell">
+                                        {% if plantacion.cultivo.emoji %}
+                                            <span class="emoji">{{ plantacion.cultivo.emoji }}</span>
+                                        {% endif %}
+                                        <span>{{ plantacion.cultivo.nombre }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if plantacion.variedad %}
+                                        {{ plantacion.variedad.nombre }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ plantacion.get_estado_display }}</td>
+                                <td>
+                                    {% if plantacion.fecha_siembra %}
+                                        {{ plantacion.fecha_siembra|date:"d/m/Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if plantacion.fecha_trasplante %}
+                                        {{ plantacion.fecha_trasplante|date:"d/m/Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if plantacion.modo_implantacion %}
+                                        {% if plantacion.modo_implantacion == 'plantel' %}
+                                            <span class="entrada-badge entrada-plantel">Plantel</span>
+                                        {% elif plantacion.modo_implantacion == 'semillero' %}
+                                            <span class="entrada-badge entrada-semillero">Semillero</span>
+                                        {% elif plantacion.modo_implantacion == 'directa' %}
+                                            <span class="entrada-badge entrada-directa">Directa</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {# Fallback: deducir por tipo_siembra o fechas #}
+                                        {% if plantacion.tipo_siembra == 'semillero' and plantacion.fecha_trasplante %}
+                                            <span class="entrada-badge entrada-semillero">Semillero</span>
+                                        {% elif plantacion.fecha_trasplante and not plantacion.fecha_siembra %}
+                                            <span class="entrada-badge entrada-plantel">Plantel</span>
+                                        {% elif plantacion.fecha_siembra and not plantacion.fecha_trasplante %}
+                                            <span class="entrada-badge entrada-directa">Directa</span>
+                                        {% else %}
+                                            <span class="entrada-badge entrada-vacia">-</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if plantacion.fecha_recoleccion_inicio %}
+                                        {{ plantacion.fecha_recoleccion_inicio|date:"d/m/Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ plantacion.cantidad|default:"-" }}</td>
+                                <td>
+                                    <span class="estado-badge"
+                                          style="background-color: {{ plantacion.semaforo_estado_color }}; color: {{ plantacion.semaforo_estado_texto }};">
+                                        {{ plantacion.etiqueta_semaforo_estado }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'detalle_plantacion' plantacion.id %}"
+                                           class="btn btn-outline-primary">
+                                            Ver
+                                        </a>
+                                        <a href="{% url 'editar_plantacion' plantacion.id %}"
+                                           class="btn btn-success">
+                                            Editar
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+{% else %}
+    <div class="empty-state">
+        <h4>No hay plantaciones registradas</h4>
+        <p class="mb-3">Empieza creando tu primera plantación para organizar el huerto.</p>
+        <a href="{% url 'nueva_plantacion' %}" class="btn btn-success">Crear plantación</a>
+    </div>
+{% endif %}
+{% endblock %}

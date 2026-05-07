@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .foto-page {
+        max-width: 820px;
+        margin: 0 auto;
+        padding-bottom: 2rem;
+    }
+
+    .foto-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .foto-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2f6f3e;
+        margin-bottom: 0.25rem;
+    }
+
+    .foto-subtitle {
+        color: #6b7280;
+        margin-bottom: 0;
+    }
+
+    .foto-card {
+        border: 1px solid #e9ecef;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 8px 24px rgba(17, 24, 39, 0.05);
+    }
+
+    .foto-card .card-body {
+        padding: 1.4rem;
+    }
+
+    .field-block + .field-block {
+        margin-top: 1rem;
+    }
+
+    .field-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.4rem;
+    }
+
+    .field-help {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-top: 0.35rem;
+    }
+
+    .field-error {
+        color: #b91c1c;
+        font-size: 0.85rem;
+        margin-top: 0.35rem;
+    }
+
+    .resume-box {
+        background: #f7faf8;
+        border: 1px solid #e5efe8;
+        border-radius: 14px;
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .resume-box p {
+        margin-bottom: 0.45rem;
+        color: #374151;
+    }
+
+    .resume-box p:last-child {
+        margin-bottom: 0;
+    }
+
+    .actions-row {
+        margin-top: 1.5rem;
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 575.98px) {
+        .foto-title {
+            font-size: 1.6rem;
+        }
+
+        .foto-card .card-body {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="foto-page">
+    <div class="foto-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h1 class="foto-title">Añadir foto a la plantación</h1>
+            <p class="foto-subtitle">Guarda una imagen del cultivo para seguir su evolución real en el tiempo.</p>
+        </div>
+        <a href="{% url 'detalle_plantacion' plantacion.id %}" class="btn btn-secondary">Volver a la ficha</a>
+    </div>
+
+    <div class="card foto-card">
+        <div class="card-body">
+            <div class="resume-box">
+                <p><strong>Plantación:</strong> {{ plantacion.nombre_completo }}</p>
+                <p><strong>Parcela:</strong> {{ plantacion.parcela.nombre }}</p>
+                <p><strong>Fecha de siembra:</strong>
+                    {% if plantacion.fecha_siembra %}
+                        {{ plantacion.fecha_siembra|date:"d/m/Y" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="field-block">
+                    <label class="field-label" for="{{ form.imagen.id_for_label }}">Imagen</label>
+                    {{ form.imagen }}
+                    {% if form.imagen.help_text %}
+                        <div class="field-help">{{ form.imagen.help_text }}</div>
+                    {% endif %}
+                    {% if form.imagen.errors %}
+                        <div class="field-error">{{ form.imagen.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="field-block">
+                            <label class="field-label" for="{{ form.fecha_foto.id_for_label }}">Fecha de la foto</label>
+                            {{ form.fecha_foto }}
+                            {% if form.fecha_foto.help_text %}
+                                <div class="field-help">{{ form.fecha_foto.help_text }}</div>
+                            {% endif %}
+                            {% if form.fecha_foto.errors %}
+                                <div class="field-error">{{ form.fecha_foto.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="field-block">
+                            <label class="field-label" for="{{ form.tipo_foto.id_for_label }}">Etapa del cultivo</label>
+                            {{ form.tipo_foto }}
+                            {% if form.tipo_foto.help_text %}
+                                <div class="field-help">{{ form.tipo_foto.help_text }}</div>
+                            {% endif %}
+                            {% if form.tipo_foto.errors %}
+                                <div class="field-error">{{ form.tipo_foto.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-block">
+                    <label class="field-label" for="{{ form.dias_ciclo.id_for_label }}">Días de ciclo</label>
+                    {{ form.dias_ciclo }}
+                    {% if form.dias_ciclo.help_text %}
+                        <div class="field-help">{{ form.dias_ciclo.help_text }}</div>
+                    {% endif %}
+                    {% if form.dias_ciclo.errors %}
+                        <div class="field-error">{{ form.dias_ciclo.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="field-block">
+                    <label class="field-label" for="{{ form.descripcion.id_for_label }}">Descripción</label>
+                    {{ form.descripcion }}
+                    {% if form.descripcion.help_text %}
+                        <div class="field-help">{{ form.descripcion.help_text }}</div>
+                    {% endif %}
+                    {% if form.descripcion.errors %}
+                        <div class="field-error">{{ form.descripcion.errors }}</div>
+                    {% endif %}
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="field-error mt-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="actions-row">
+                    <button type="submit" class="btn btn-success">Guardar foto</button>
+                    <a href="{% url 'detalle_plantacion' plantacion.id %}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

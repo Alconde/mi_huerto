@@ -1,0 +1,601 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+        color: #2f6f3e;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .page-subtitle {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 8px 20px rgba(17, 24, 39, 0.04);
+    }
+
+    .stat-label {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b7280;
+        margin-bottom: 0.35rem;
+    }
+
+    .stat-value {
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1;
+    }
+
+    .stat-accent {
+        color: #d97706;
+    }
+
+    .proximas-card {
+        border-radius: 16px;
+        border: 1px solid #fde7b0;
+        background: #fffaf0;
+        box-shadow: 0 8px 20px rgba(17, 24, 39, 0.03);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .proximas-header {
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid #f6df9f;
+        font-weight: 700;
+        color: #9a6700;
+        background: #fff6dd;
+    }
+
+    .proximas-body {
+        padding: 1rem;
+    }
+
+    .proximas-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 0.6rem;
+    }
+
+    .proximas-list {
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+
+    .proximas-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f3ebd0;
+        font-size: 0.9rem;
+        color: #444;
+    }
+
+    .proximas-list li:last-child {
+        border-bottom: none;
+    }
+
+    .proximas-fecha {
+        min-width: 42px;
+        padding: 4px 8px;
+        background: #f6e7b8;
+        color: #6a4f00;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-align: center;
+        flex-shrink: 0;
+        line-height: 1.2;
+    }
+
+    .proximas-texto {
+        flex: 1;
+        line-height: 1.5;
+    }
+
+    .badge-seguimiento {
+        display: inline-block;
+        margin-left: 0.3rem;
+        padding: 0.15rem 0.4rem;
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        color: #856404;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .muted-small {
+        font-size: 0.85rem;
+        color: #9ca3af;
+        font-style: italic;
+        border-bottom: none !important;
+        padding: 8px 0 !important;
+    }
+
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .filters-group .btn {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+    }
+
+    .filters-group .btn-group {
+        margin-right: 0.4rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .tabla-tareas {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
+        overflow: hidden;
+    }
+
+    .tabla-tareas thead {
+        background: #f7faf8;
+    }
+
+    .tabla-tareas th {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4b5563;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid #e5e7eb !important;
+        white-space: nowrap;
+    }
+
+    .tabla-tareas td {
+        font-size: 0.9rem;
+        vertical-align: middle;
+    }
+
+    .badge-tipo,
+    .badge-estado {
+        border-radius: 999px;
+        font-size: 0.75rem;
+        padding: 0.28rem 0.62rem;
+        font-weight: 700;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .bg-brown {
+        background-color: #8b5e3c !important;
+        color: #fff !important;
+    }
+
+    .texto-tachado {
+        text-decoration: line-through;
+    }
+
+    .zona-cell strong {
+        color: #1f2937;
+    }
+
+    .obs-cell {
+        max-width: 260px;
+    }
+
+    .tiempo-cell {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    .tiempo-estimado {
+        color: #d97706;
+        font-weight: 600;
+    }
+
+    .tiempo-real {
+        color: #2e7d32;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #6b7280;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 18px;
+    }
+
+    @media (max-width: 1199.98px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">📓 Diario de Tareas</h1>
+        <p class="page-subtitle">
+            Registro y seguimiento de las tareas del huerto, con foco en lo pendiente y lo próximo.
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'nueva_tarea' %}" class="btn btn-success">
+            + Añadir Tarea
+        </a>
+    </div>
+</div>
+
+<div class="proximas-card">
+    <div class="proximas-header">
+        🔔 Próximas tareas
+    </div>
+    <div class="proximas-body">
+        <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="proximas-title">Hoy</div>
+                <ul class="proximas-list">
+                    {% for tarea in tareas_hoy %}
+                    <li>
+                        {% if tarea.fecha_proxima and tarea.fecha_proxima|date:"Ymd" == hoy|date:"Ymd" %}
+                            <span class="proximas-fecha">{{ tarea.fecha_proxima|date:"d/m" }}</span>
+                            <span class="proximas-texto">
+                                <strong>{{ tarea.get_tipo_display }}</strong>
+                                <span class="badge-seguimiento">📅 Seguimiento</span>
+                                {% if tarea.todo_el_huerto %}
+                                    — Todo el huerto
+                                {% elif tarea.zona %}
+                                    — {{ tarea.zona }}
+                                {% elif tarea.plantacion %}
+                                    — {{ tarea.plantacion.parcela.nombre }}
+                                {% endif %}
+                                {% if tarea.tiempo_estimado_min %}
+                                    <br><small class="tiempo-estimado">~{{ tarea.tiempo_estimado_min }}min</small>
+                                {% endif %}
+                            </span>
+                        {% else %}
+                            <span class="proximas-fecha">{{ tarea.fecha|date:"d/m" }}</span>
+                            <span class="proximas-texto">
+                                <strong>{{ tarea.get_tipo_display }}</strong>
+                                {% if tarea.todo_el_huerto %}
+                                    — Todo el huerto
+                                {% elif tarea.zona %}
+                                    — {{ tarea.zona }}
+                                {% elif tarea.plantacion %}
+                                    — {{ tarea.plantacion.parcela.nombre }}
+                                {% endif %}
+                                {% if tarea.tiempo_estimado_min %}
+                                    <br><small class="tiempo-estimado">~{{ tarea.tiempo_estimado_min }}min</small>
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li class="muted-small">Nada programado para hoy.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="proximas-title">Mañana</div>
+                <ul class="proximas-list">
+                    {% for tarea in tareas_manana %}
+                    <li>
+                        {% if tarea.fecha_proxima and tarea.fecha_proxima|date:"Ymd" == manana|date:"Ymd" %}
+                            <span class="proximas-fecha">{{ tarea.fecha_proxima|date:"d/m" }}</span>
+                            <span class="proximas-texto">
+                                <strong>{{ tarea.get_tipo_display }}</strong>
+                                <span class="badge-seguimiento">📅 Seguimiento</span>
+                                {% if tarea.todo_el_huerto %}
+                                    — Todo el huerto
+                                {% elif tarea.zona %}
+                                    — {{ tarea.zona }}
+                                {% elif tarea.plantacion %}
+                                    — {{ tarea.plantacion.parcela.nombre }}
+                                {% endif %}
+                                {% if tarea.tiempo_estimado_min %}
+                                    <br><small class="tiempo-estimado">~{{ tarea.tiempo_estimado_min }}min</small>
+                                {% endif %}
+                            </span>
+                        {% else %}
+                            <span class="proximas-fecha">{{ tarea.fecha|date:"d/m" }}</span>
+                            <span class="proximas-texto">
+                                <strong>{{ tarea.get_tipo_display }}</strong>
+                                {% if tarea.todo_el_huerto %}
+                                    — Todo el huerto
+                                {% elif tarea.zona %}
+                                    — {{ tarea.zona }}
+                                {% elif tarea.plantacion %}
+                                    — {{ tarea.plantacion.parcela.nombre }}
+                                {% endif %}
+                                {% if tarea.tiempo_estimado_min %}
+                                    <br><small class="tiempo-estimado">~{{ tarea.tiempo_estimado_min }}min</small>
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li class="muted-small">Nada programado para mañana.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="col-md-4">
+                <div class="proximas-title">Próximos 7 días</div>
+                <ul class="proximas-list">
+                    {% for tarea in tareas_semana %}
+                    <li>
+                        {% if tarea.fecha_proxima and tarea.fecha_proxima >= hoy and tarea.fecha_proxima <= proxima_semana %}
+                            <span class="proximas-fecha">{{ tarea.fecha_proxima|date:"d/m" }}</span>
+                            <span class="proximas-texto">
+                                <strong>{{ tarea.get_tipo_display }}</strong>
+                                <span class="badge-seguimiento">📅 Seguimiento</span>
+                                {% if tarea.todo_el_huerto %}
+                                    — Todo el huerto
+                                {% elif tarea.zona %}
+                                    — {{ tarea.zona }}
+                                {% elif tarea.plantacion %}
+                                    — {{ tarea.plantacion.parcela.nombre }}
+                                {% endif %}
+                                {% if tarea.tiempo_estimado_min %}
+                                    <br><small class="tiempo-estimado">~{{ tarea.tiempo_estimado_min }}min</small>
+                                {% endif %}
+                            </span>
+                        {% else %}
+                            <span class="proximas-fecha">{{ tarea.fecha|date:"d/m" }}</span>
+                            <span class="proximas-texto">
+                                <strong>{{ tarea.get_tipo_display }}</strong>
+                                {% if tarea.todo_el_huerto %}
+                                    — Todo el huerto
+                                {% elif tarea.zona %}
+                                    — {{ tarea.zona }}
+                                {% elif tarea.plantacion %}
+                                    — {{ tarea.plantacion.parcela.nombre }}
+                                {% endif %}
+                                {% if tarea.tiempo_estimado_min %}
+                                    <br><small class="tiempo-estimado">~{{ tarea.tiempo_estimado_min }}min</small>
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li class="muted-small">Nada previsto esta semana.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total de tareas</div>
+        <div class="stat-value">{{ total_tareas }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Pendientes</div>
+        <div class="stat-value">{{ pendientes }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Última tarea</div>
+        <div class="stat-value stat-accent">
+            {% if ultima_tarea_fecha %}
+                {{ ultima_tarea_fecha|date:"d/m" }}
+            {% else %}
+                -
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Completadas</div>
+        <div class="stat-value">{{ completadas }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Tiempo dedicado</div>
+        <div class="stat-value stat-accent">
+            {{ total_tiempo_real_texto }}
+        </div>
+    </div>
+</div>
+
+<div class="toolbar">
+    <div class="filters-group">
+        <div class="btn-group" role="group" aria-label="Filtro estado">
+            <a href="?estado=pendientes{% if tipo_actual %}&tipo={{ tipo_actual }}{% endif %}"
+               class="btn btn-outline-secondary {% if estado_actual == 'pendientes' %}active bg-secondary text-white{% endif %}">
+                Pendientes
+            </a>
+            <a href="?estado=completadas{% if tipo_actual %}&tipo={{ tipo_actual }}{% endif %}"
+               class="btn btn-outline-secondary {% if estado_actual == 'completadas' %}active bg-secondary text-white{% endif %}">
+                Completadas
+            </a>
+            <a href="?estado=todas{% if tipo_actual %}&tipo={{ tipo_actual }}{% endif %}"
+               class="btn btn-outline-secondary {% if estado_actual == 'todas' %}active bg-secondary text-white{% endif %}">
+                Todas
+            </a>
+        </div>
+
+        <div class="btn-group" role="group" aria-label="Filtro tipo">
+            <a href="?tipo=riego{% if estado_actual %}&estado={{ estado_actual }}{% endif %}"
+               class="btn btn-outline-primary {% if tipo_actual == 'riego' %}active bg-primary text-white{% endif %}">
+                Riego
+            </a>
+            <a href="?tipo=cosecha{% if estado_actual %}&estado={{ estado_actual }}{% endif %}"
+               class="btn btn-outline-warning {% if tipo_actual == 'cosecha' %}active bg-warning text-dark{% endif %}">
+                Cosecha
+            </a>
+            <a href="?tipo=tratamiento{% if estado_actual %}&estado={{ estado_actual }}{% endif %}"
+               class="btn btn-outline-danger {% if tipo_actual == 'tratamiento' %}active bg-danger text-white{% endif %}">
+                Tratamiento
+            </a>
+            <a href="?tipo=labores{% if estado_actual %}&estado={{ estado_actual %}{% endif %}"
+               class="btn btn-outline-success {% if tipo_actual == 'labores' %}active bg-success text-white{% endif %}">
+                Labores
+            </a>
+            <a href="?tipo=todos{% if estado_actual %}&estado={{ estado_actual }}{% endif %}"
+               class="btn btn-outline-secondary {% if tipo_actual == 'todos' or not tipo_actual %}active bg-secondary text-white{% endif %}">
+                Todos los tipos
+            </a>
+        </div>
+    </div>
+
+    <div class="muted-small">
+        {{ tareas|length }} tarea{{ tareas|length|pluralize:"s" }} en este filtro
+    </div>
+</div>
+
+<div class="tabla-tareas">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Zona / Cultivo</th>
+                    <th>Tiempo</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tarea in tareas %}
+                <tr class="{% if tarea.completada %}text-muted{% endif %}">
+                    <td>
+                        {% if tarea.completada %}
+                            <span class="texto-tachado">{{ tarea.fecha|date:"d/m/Y" }}</span>
+                        {% else %}
+                            {{ tarea.fecha|date:"d/m/Y" }}
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <span class="badge badge-tipo
+                            {% if tarea.tipo == 'riego' %}bg-primary
+                            {% elif tarea.tipo == 'cosecha' %}bg-warning text-dark
+                            {% elif tarea.tipo == 'tratamiento' %}bg-danger
+                            {% elif tarea.tipo == 'labores' %}bg-success
+                            {% elif tarea.tipo == 'hedrar' %}bg-success
+                            {% elif tarea.tipo == 'abono' %}bg-info text-dark
+                            {% elif tarea.tipo == 'siembra' %}bg-dark
+                            {% elif tarea.tipo == 'trasplante' %}bg-secondary
+                            {% elif tarea.tipo == 'preparar' %}bg-brown
+                            {% elif tarea.tipo == 'foto' %}bg-info
+                            {% else %}bg-secondary{% endif %}">
+                            {{ tarea.get_tipo_display }}
+                        </span>
+                    </td>
+
+                    <td class="zona-cell">
+                        {% if tarea.todo_el_huerto %}
+                            <strong>Todo el huerto</strong>
+                        {% elif tarea.zona %}
+                            <strong>{{ tarea.zona }}</strong>
+                        {% elif tarea.plantacion %}
+                            <strong>{{ tarea.plantacion.parcela.nombre }}</strong>
+                            <br>
+                            <small>{{ tarea.plantacion.nombre_completo }}</small>
+                        {% else %}
+                            <span class="muted-small">Sin zona</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="tiempo-cell">
+                        {% if tarea.tiempo_estimado_min %}
+                            <div><span class="tiempo-estimado">Est:</span> {{ tarea.tiempo_estimado_min }}min</div>
+                        {% endif %}
+                        {% if tarea.tiempo_real_min %}
+                            <div><span class="tiempo-real">Real:</span> {{ tarea.tiempo_real_min }}min</div>
+                        {% endif %}
+                        {% if not tarea.tiempo_estimado_min and not tarea.tiempo_real_min %}
+                            <span class="muted-small">-</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="obs-cell">
+                        {% if tarea.descripcion %}
+                            <span class="{% if tarea.completada %}texto-tachado{% endif %}">
+                                {{ tarea.descripcion|truncatechars:60 }}
+                            </span>
+                        {% else %}
+                            <span class="muted-small">-</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if tarea.completada %}
+                            <span class="badge badge-estado bg-success">Completada</span>
+                        {% else %}
+                            <span class="badge badge-estado bg-secondary">Pendiente</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{% url 'detalle_tarea' tarea.id %}" class="btn btn-outline-secondary" title="Ver">
+                                Ver
+                            </a>
+                            <a href="{% url 'editar_tarea' tarea.id %}" class="btn btn-outline-primary" title="Editar">
+                                Editar
+                            </a>
+                            <a href="{% url 'eliminar_tarea' tarea.id %}" class="btn btn-outline-danger" title="Eliminar">
+                                Eliminar
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        No hay tareas que coincidan con este filtro.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

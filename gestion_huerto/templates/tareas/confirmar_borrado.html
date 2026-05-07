@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #fff3e0 0%, #fff 100%);">
+                <div class="card-body p-5" style="text-align: center;">
+
+                    <div style="font-size: 4rem; margin-bottom: 1.5rem;">
+                        ⚠️
+                    </div>
+
+                    <h3 style="color: #d32f2f; margin-bottom: 1rem;">
+                        Eliminar Tarea
+                    </h3>
+
+                    <p style="color: #666; margin-bottom: 2rem; line-height: 1.6;">
+                        Estás a punto de eliminar permanentemente esta tarea. Esta acción <strong>no se puede deshacer</strong>.
+                    </p>
+
+                    <div class="card bg-light border-0 mb-4" style="border-left: 4px solid #d32f2f;">
+                        <div class="card-body" style="text-align: left;">
+                            <p class="mb-2">
+                                <strong style="color: #333;">Tipo:</strong>
+                                <span class="badge" style="background-color:
+                                    {% if tarea.tipo == 'riego' %}#1976d2
+                                    {% elif tarea.tipo == 'hedrar' %}#388e3c
+                                    {% elif tarea.tipo == 'abono' %}#f57c00
+                                    {% elif tarea.tipo == 'tratamiento' %}#d32f2f
+                                    {% elif tarea.tipo == 'cosecha' %}#689f38
+                                    {% elif tarea.tipo == 'siembra' %}#424242
+                                    {% elif tarea.tipo == 'trasplante' %}#7b1fa2
+                                    {% elif tarea.tipo == 'preparar' %}#8b5e3c
+                                    {% elif tarea.tipo == 'labores' %}#00897b
+                                    {% elif tarea.tipo == 'foto' %}#546e7a
+                                    {% else %}#757575{% endif %};
+                                    color: white;">
+                                    {{ tarea.get_tipo_display }}
+                                </span>
+                            </p>
+
+                            <p class="mb-2">
+                                <strong style="color: #333;">Fecha:</strong>
+                                <span>{{ tarea.fecha|date:"d/m/Y" }}</span>
+                            </p>
+
+                            {% if tarea.todo_el_huerto %}
+                            <p class="mb-2">
+                                <strong style="color: #333;">Afecta a:</strong>
+                                <span class="badge bg-danger">TODO EL HUERTO</span>
+                            </p>
+                            {% elif tarea.zona %}
+                            <p class="mb-2">
+                                <strong style="color: #333;">Zona:</strong>
+                                <span>{{ tarea.zona }}</span>
+                            </p>
+                            {% elif tarea.plantacion %}
+                            <p class="mb-2">
+                                <strong style="color: #333;">Plantación:</strong>
+                                <span>{{ tarea.plantacion.nombre_completo }}</span>
+                            </p>
+                            <p class="mb-2">
+                                <strong style="color: #333;">Parcela:</strong>
+                                <span>{{ tarea.plantacion.parcela.nombre }}</span>
+                            </p>
+                            {% endif %}
+
+                            {% if tarea.estado_suelo %}
+                            <p class="mb-2">
+                                <strong style="color: #333;">Estado del suelo:</strong>
+                                <span>{{ tarea.estado_suelo }}</span>
+                            </p>
+                            {% endif %}
+
+                            {% if tarea.descripcion %}
+                            <p class="mb-0">
+                                <strong style="color: #333;">Descripción:</strong>
+                                <br>
+                                <small style="color: #666;">{{ tarea.descripcion }}</small>
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <form method="post" style="margin-bottom: 1rem;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-lg w-100 mb-2">
+                            🗑️ Eliminar permanentemente
+                        </button>
+                    </form>
+
+                    <a href="{% url 'lista_tareas' %}" class="btn btn-secondary btn-lg w-100">
+                        ← Cancelar y volver
+                    </a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,581 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+  :root {
+    --verde-oscuro: #2e7d32;
+    --verde-medio: #4caf50;
+    --verde-claro: #c8e6c9;
+    --verde-fondo: #f0faf0;
+    --verde-sidebar: #eff7f0;
+    --naranja: #f57c00;
+    --amarillo-fondo: #fff8e1;
+    --radio: 0.5rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    font-size: 0.83rem;
+    color: #374151;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.01em;
+    display: block;
+  }
+
+  .help-icon {
+    color: #9ca3af;
+    cursor: help;
+    font-size: 0.78rem;
+    margin-left: 3px;
+    transition: color 0.15s;
+  }
+
+  .help-icon:hover {
+    color: var(--verde-oscuro);
+  }
+
+  .form-control,
+  .form-select {
+    border: 1.5px solid #d1d5db !important;
+    border-radius: var(--radio) !important;
+    font-size: 0.88rem !important;
+    padding: 0.45rem 0.75rem !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+    background-color: #fff !important;
+    width: 100% !important;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: var(--verde-medio) !important;
+    box-shadow: 0 0 0 3px rgba(76,175,80,0.15) !important;
+    outline: none !important;
+  }
+
+  .siembra-radios {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+  }
+
+  .siembra-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: var(--radio);
+    cursor: pointer;
+    font-size: 0.86rem;
+    color: #374151;
+    background: #fff;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+
+  .siembra-radio-label:has(input:checked) {
+    border-color: var(--verde-medio);
+    background: #e8f5e9;
+    color: var(--verde-oscuro);
+    font-weight: 600;
+  }
+
+  .siembra-radio-label input[type="radio"] {
+    accent-color: var(--verde-oscuro);
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 1.5rem 0 1rem;
+  }
+
+  .section-divider span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    white-space: nowrap;
+  }
+
+  .section-divider hr {
+    flex: 1;
+    border: none;
+    border-top: 1.5px solid #e5e7eb;
+    margin: 0;
+  }
+
+  .card-form {
+    border: none !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.07) !important;
+  }
+
+  .sidebar-consejos {
+    background: var(--verde-sidebar);
+    border: none !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+  }
+
+  .sidebar-consejos h5 {
+    color: var(--verde-oscuro);
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .sidebar-consejos li {
+    font-size: 0.84rem;
+    color: #4b5563;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    list-style: none;
+  }
+
+  .sidebar-consejos li:last-child {
+    border-bottom: none;
+  }
+
+  .sidebar-resumen {
+    background: var(--amarillo-fondo);
+    border: none !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+  }
+
+  .sidebar-resumen h6 {
+    color: var(--naranja);
+    font-weight: 700;
+  }
+
+  .sidebar-resumen p {
+    font-size: 0.87rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .btn-crear {
+    background: var(--verde-oscuro);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    padding: 0.55rem 1.5rem;
+    border-radius: var(--radio);
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn-crear:hover {
+    background: #1b5e20;
+    transform: translateY(-1px);
+    color: #fff;
+  }
+
+  .btn-crear:active {
+    transform: translateY(0);
+  }
+
+  .form-header-title {
+    color: var(--verde-oscuro);
+    font-weight: 800;
+    font-size: 1.45rem;
+  }
+
+  .alert-rotacion {
+    border-left: 4px solid #f59e0b;
+    background: #fffbeb;
+    border-radius: var(--radio);
+    font-size: 0.9rem;
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .field-error {
+    font-size: 0.8rem;
+    color: #dc2626;
+    margin-top: 0.2rem;
+  }
+
+  .field-help {
+    font-size: 0.78rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+  .implantacion-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.implantacion-card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 0.95rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 0.75rem;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  min-height: 52px;
+}
+
+.implantacion-card:hover {
+  border-color: #81c784;
+  background: #f7fcf7;
+}
+
+.implantacion-card:has(input:checked) {
+  border-color: var(--verde-medio);
+  background: #e8f5e9;
+  box-shadow: 0 0 0 3px rgba(76,175,80,0.10);
+}
+
+.implantacion-card input[type="radio"] {
+  margin: 0;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--verde-oscuro);
+  flex-shrink: 0;
+}
+
+.implantacion-texto {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.3;
+}
+
+.implantacion-card:has(input:checked) .implantacion-texto {
+  color: var(--verde-oscuro);
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .implantacion-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="row g-4">
+
+  <div class="col-lg-4 order-lg-2 order-1">
+    <div class="card sidebar-consejos mb-3">
+      <div class="card-body p-3">
+        <h5 class="mb-3">💡 Consejos rápidos</h5>
+        <ul class="ps-0 mb-0">
+          <li>📍 Usa fila y columna para ubicar exactamente el tramo dentro de la parcela.</li>
+          <li>📏 Ajusta la distancia personalizada si tu cultivo requiere un marco distinto.</li>
+          <li>🌱 Si usas semillero, registra después la fecha real de trasplante.</li>
+          <li>📅 Las fechas del ciclo ayudan a ver mejor el plano y la planificación anual.</li>
+          <li>🛡️ En horticultura ecológica conviene registrar bien trasplantes y fechas de entrada en parcela para planificar riegos y rotaciones.</li>
+        </ul>
+      </div>
+    </div>
+
+    {% if plantacion %}
+    <div class="card sidebar-resumen">
+      <div class="card-body p-3">
+        <h6>📋 Resumen actual</h6>
+        <p><strong>Cultivo:</strong> {{ plantacion.cultivo.nombre }}</p>
+        <p><strong>Parcela:</strong> {{ plantacion.parcela.nombre }}</p>
+        <p class="mb-0"><strong>Capacidad estimada:</strong> {{ plantacion.calcular_capacidad }} plantas</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-8 order-lg-1 order-2">
+    <div class="card card-form">
+      <div class="card-body p-4">
+
+        <h2 class="form-header-title mb-1">
+          {% if plantacion %}✏️ Editar Plantación{% else %}➕ Nueva Plantación{% endif %}
+        </h2>
+        <p class="text-muted mb-4" style="font-size:0.88rem;">
+          Registra los detalles de la plantación y su ubicación en el huerto.
+        </p>
+
+        {% if rotacion_warning %}
+        <div class="alert alert-rotacion alert-dismissible fade show mb-4" role="alert">
+          <strong><i class="bi bi-exclamation-triangle-fill me-1"></i>Aviso de Rotación:</strong><br>
+          {{ rotacion_warning.message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger rounded-3 mb-3">
+            {{ form.non_field_errors }}
+          </div>
+          {% endif %}
+
+          <div class="section-divider"><span>🌱 Cultivo</span><hr></div>
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.cultivo.id_for_label }}">Cultivo</label>
+              {{ form.cultivo }}
+              {% if form.cultivo.errors %}<div class="field-error">{{ form.cultivo.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.variedad_texto.id_for_label }}">
+                Variedad específica
+                <i class="bi bi-question-circle help-icon"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   title="Escribe la variedad de tu cultivo, por ejemplo cherry o corazón de buey."></i>
+              </label>
+              {{ form.variedad_texto }}
+              {% if form.variedad_texto.errors %}<div class="field-error">{{ form.variedad_texto.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="{{ form.parcela.id_for_label }}">Parcela</label>
+              {{ form.parcela }}
+              {% if form.parcela.errors %}<div class="field-error">{{ form.parcela.errors }}</div>{% endif %}
+            </div>
+
+            {% if form.variedad %}
+            <div class="col-12">
+              <label class="form-label" for="{{ form.variedad.id_for_label }}">Variedad guardada</label>
+              {{ form.variedad }}
+              {% if form.variedad.errors %}<div class="field-error">{{ form.variedad.errors }}</div>{% endif %}
+            </div>
+            {% endif %}
+
+          </div>         
+
+            <div class="section-divider"><span>🌿 Entrada al terreno</span><hr></div>
+              <div class="row g-3">
+
+                <div class="col-md-7">
+                <label class="form-label">
+                  Cómo entra al terreno
+                  <i class="bi bi-question-circle help-icon"
+                    data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Indica cómo se incorpora este cultivo a la parcela."></i>
+                </label>
+
+                <div class="implantacion-grid">
+                  {% for radio in form.modo_implantacion %}
+                  <label class="implantacion-card">
+                    {{ radio.tag }}
+                    <span class="implantacion-texto">{{ radio.choice_label }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+
+                <div class="field-help">
+                  Elige una sola opción: siembra directa, desde semillero o plantel comprado.
+                </div>
+
+                {% if form.modo_implantacion.errors %}
+                  <div class="field-error mt-1">{{ form.modo_implantacion.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-5">
+                <label class="form-label" for="{{ form.estado.id_for_label }}">Estado</label>
+                {{ form.estado }}
+                {% if form.estado.errors %}<div class="field-error">{{ form.estado.errors }}</div>{% endif %}
+              </div>
+
+                
+
+              </div>        
+
+          
+
+          <div class="section-divider"><span>📅 Fechas</span><hr></div>
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.fecha_siembra.id_for_label }}">{{ form.fecha_siembra.label }}</label>
+              {{ form.fecha_siembra }}
+              {% if form.fecha_siembra.errors %}<div class="field-error">{{ form.fecha_siembra.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.fecha_germinado_estimado.id_for_label }}">{{ form.fecha_germinado_estimado.label }}</label>
+              {{ form.fecha_germinado_estimado }}
+              {% if form.fecha_germinado_estimado.errors %}<div class="field-error">{{ form.fecha_germinado_estimado.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.fecha_germinado_real.id_for_label }}">{{ form.fecha_germinado_real.label }}</label>
+              {{ form.fecha_germinado_real }}
+              {% if form.fecha_germinado_real.errors %}<div class="field-error">{{ form.fecha_germinado_real.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.fecha_trasplante.id_for_label }}">
+                {{ form.fecha_trasplante.label }}
+                <i class="bi bi-question-circle help-icon"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   title="Fecha en que la planta pasa del semillero al terreno definitivo o fecha de entrada si compras plantel."></i>
+              </label>
+              {{ form.fecha_trasplante }}
+              {% if form.fecha_trasplante.errors %}<div class="field-error">{{ form.fecha_trasplante.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.fecha_recoleccion_inicio.id_for_label }}">{{ form.fecha_recoleccion_inicio.label }}</label>
+              {{ form.fecha_recoleccion_inicio }}
+              {% if form.fecha_recoleccion_inicio.errors %}<div class="field-error">{{ form.fecha_recoleccion_inicio.errors }}</div>{% endif %}
+            </div>
+
+          </div>
+
+          <div class="section-divider"><span>📦 Detalles</span><hr></div>
+          <div class="row g-3">
+
+            <div class="col-md-4">
+              <label class="form-label" for="{{ form.cantidad.id_for_label }}">Cantidad</label>
+              {{ form.cantidad }}
+              {% if form.cantidad.errors %}<div class="field-error">{{ form.cantidad.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label" for="{{ form.procedencia.id_for_label }}">Procedencia</label>
+              {{ form.procedencia }}
+              {% if form.procedencia.errors %}<div class="field-error">{{ form.procedencia.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label" for="{{ form.distancia_personalizada.id_for_label }}">
+                Distancia (cm)
+                <i class="bi bi-question-circle help-icon"
+                   data-bs-toggle="tooltip" data-bs-placement="top"
+                   title="En centímetros. Déjalo vacío para usar la distancia recomendada del cultivo."></i>
+              </label>
+              {{ form.distancia_personalizada }}
+              {% if form.distancia_personalizada.errors %}<div class="field-error">{{ form.distancia_personalizada.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.origen_plantel.id_for_label }}">Origen del plantel</label>
+              {{ form.origen_plantel }}
+              {% if form.origen_plantel.errors %}<div class="field-error">{{ form.origen_plantel.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="{{ form.precio_unitario_cosecha.id_for_label }}">Precio unitario cosecha (€)</label>
+              {{ form.precio_unitario_cosecha }}
+              {% if form.precio_unitario_cosecha.errors %}<div class="field-error">{{ form.precio_unitario_cosecha.errors }}</div>{% endif %}
+            </div>
+
+          </div>
+
+          <div class="section-divider"><span>📍 Ubicación en parcela</span><hr></div>
+          <div class="row g-3">
+
+            <div class="col-6 col-md-3">
+              <label class="form-label" for="{{ form.fila_inicio.id_for_label }}">Fila inicio</label>
+              {{ form.fila_inicio }}
+              {% if form.fila_inicio.errors %}<div class="field-error">{{ form.fila_inicio.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-6 col-md-3">
+              <label class="form-label" for="{{ form.fila_fin.id_for_label }}">Fila fin</label>
+              {{ form.fila_fin }}
+              {% if form.fila_fin.errors %}<div class="field-error">{{ form.fila_fin.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-6 col-md-3">
+              <label class="form-label" for="{{ form.columna_inicio.id_for_label }}">Columna inicio</label>
+              {{ form.columna_inicio }}
+              {% if form.columna_inicio.errors %}<div class="field-error">{{ form.columna_inicio.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-6 col-md-3">
+              <label class="form-label" for="{{ form.columna_fin.id_for_label }}">Columna fin</label>
+              {{ form.columna_fin }}
+              {% if form.columna_fin.errors %}<div class="field-error">{{ form.columna_fin.errors }}</div>{% endif %}
+            </div>
+
+          </div>
+
+          <div class="section-divider"><span>📝 Seguimiento</span><hr></div>
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label class="form-label" for="{{ form.observaciones_seguimiento.id_for_label }}">Observaciones de seguimiento</label>
+              {{ form.observaciones_seguimiento }}
+              {% if form.observaciones_seguimiento.errors %}<div class="field-error">{{ form.observaciones_seguimiento.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="{{ form.notas.id_for_label }}">Notas adicionales</label>
+              {{ form.notas }}
+              {% if form.notas.errors %}<div class="field-error">{{ form.notas.errors }}</div>{% endif %}
+            </div>
+
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-crear">
+              {% if plantacion %}💾 Guardar cambios{% else %}🌱 Crear plantación{% endif %}
+            </button>
+            <a href="{% url 'lista_plantaciones' %}" class="btn btn-secondary">Cancelar</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+    new bootstrap.Tooltip(el);
+  });
+
+  const cultivoSelect = document.getElementById('{{ form.cultivo.id_for_label }}');
+  const variedadInput = document.getElementById('{{ form.variedad_texto.id_for_label }}');
+
+  if (cultivoSelect && variedadInput) {
+    const datalist = document.createElement('datalist');
+    datalist.id = 'variedades-suggestions';
+    variedadInput.setAttribute('list', 'variedades-suggestions');
+    variedadInput.parentNode.appendChild(datalist);
+
+    cultivoSelect.addEventListener('change', function () {
+      const cultivoId = this.value;
+      datalist.innerHTML = '';
+      variedadInput.value = '';
+
+      if (!cultivoId) return;
+
+      fetch('/api/variedades/' + cultivoId + '/')
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function (data) {
+          data.forEach(function (v) {
+            const opt = document.createElement('option');
+            opt.value = v.nombre;
+            if (v.notas_locales) opt.label = v.notas_locales.substring(0, 60);
+            datalist.appendChild(opt);
+          });
+        })
+        .catch(function (err) {
+          console.error('Error al cargar variedades:', err);
+        });
+    });
+  }
+});
+</script>
+{% endblock %}

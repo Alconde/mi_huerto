@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">{{ accion }} cosecha</h4>
+        </div>
+
+        <div class="card-body">
+            <p class="mb-4">
+                <strong>Plantación:</strong>
+                {{ plantacion.nombre_completo }}
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label for="{{ form.fecha_cosecha.id_for_label }}" class="form-label">
+                        {{ form.fecha_cosecha.label }}
+                    </label>
+                    {{ form.fecha_cosecha }}
+                    {% if form.fecha_cosecha.errors %}
+                        <div class="text-danger small mt-1">{{ form.fecha_cosecha.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.cantidad.id_for_label }}" class="form-label">
+                            {{ form.cantidad.label }}
+                        </label>
+                        {{ form.cantidad }}
+                        {% if form.cantidad.errors %}
+                            <div class="text-danger small mt-1">{{ form.cantidad.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.unidad.id_for_label }}" class="form-label">
+                            {{ form.unidad.label }}
+                        </label>
+                        {{ form.unidad }}
+                        {% if form.unidad.errors %}
+                            <div class="text-danger small mt-1">{{ form.unidad.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.precio_unitario.id_for_label }}" class="form-label">
+                            {{ form.precio_unitario.label }}
+                        </label>
+                        {{ form.precio_unitario }}
+                        {% if form.precio_unitario.errors %}
+                            <div class="text-danger small mt-1">{{ form.precio_unitario.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.notas.id_for_label }}" class="form-label">
+                        {{ form.notas.label }}
+                    </label>
+                    {{ form.notas }}
+                    {% if form.notas.errors %}
+                        <div class="text-danger small mt-1">{{ form.notas.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-success">
+                        Guardar cosecha
+                    </button>
+
+                    <a href="{% url 'detalle_plantacion' plantacion.id %}" class="btn btn-secondary">
+                        Cancelar
+                    </a>
+
+                    {% if cosecha %}
+                        <a href="{% url 'eliminar_cosecha' cosecha.id %}" class="btn btn-outline-danger">
+                            Eliminar
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

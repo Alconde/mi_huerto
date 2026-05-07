@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subir Foto - {{ plantacion.cultivo.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .formulario-subida {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 600px;
+        margin: 2rem auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .formulario-subida h1 {
+        color: #2e7d32;
+        margin-top: 0;
+        text-align: center;
+    }
+    
+    .plantacion-badge {
+        background: #f0f4c3;
+        color: #558b2f;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .drop-zone {
+        border: 3px dashed #2e7d32;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        background: #f5f5f5;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 1.5rem;
+    }
+    
+    .drop-zone:hover {
+        background: #e8f5e9;
+        border-color: #558b2f;
+    }
+    
+    .drop-zone.dragover {
+        background: #c8e6c9;
+        border-color: #2e7d32;
+        transform: scale(1.02);
+    }
+    
+    .drop-zone-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .drop-zone-text {
+        color: #333;
+        font-size: 1.1rem;
+    }
+    
+    .drop-zone-subtext {
+        color: #999;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .imagen-preview {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 8px;
+        margin: 1rem 0;
+        display: none;
+    }
+    
+    .imagen-preview.visible {
+        display: block;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #2e7d32;
+        box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+    }
+    
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .hito-container {
+        background: #fff3cd;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        display: none;
+    }
+    
+    .hito-container.visible {
+        display: block;
+    }
+    
+    .hito-checkbox {
+        width: auto;
+        margin-right: 0.5rem;
+    }
+    
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        margin: 0;
+        cursor: pointer;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .btn-subir {
+        background: #4CAF50;
+        color: white;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .btn-subir:hover {
+        background: #45a049;
+    }
+    
+    .btn-subir:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .btn-cancelar {
+        background: #999;
+        color: white;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.3s;
+        display: inline-block;
+    }
+    
+    .btn-cancelar:hover {
+        background: #777;
+    }
+    
+    .info-box {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #1976d2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="formulario-subida">
+        <h1>📸 Subir Nueva Foto</h1>
+        
+        <div class="plantacion-badge">
+            {{ plantacion.cultivo.emoji }} {{ plantacion.cultivo.nombre }} - {{ plantacion.parcela.nombre }}
+        </div>
+        
+        <div class="info-box">
+            💡 Tip: Puedes arrastrar y soltar la foto aquí, o hacer clic para seleccionarla.
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data" id="formulario-foto">
+            {% csrf_token %}
+            
+            <!-- ZONA DE ARRASTRE -->
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-zone-icon">📸</div>
+                <div class="drop-zone-text">Arrastra tu foto aquí</div>
+                <div class="drop-zone-subtext">o haz clic para seleccionar</div>
+                <input type="file" name="imagen" id="imagenInput" accept="image/*" style="display: none;">
+            </div>
+            
+            <!-- PREVIEW DE IMAGEN -->
+            <img id="imagenPreview" class="imagen-preview" alt="Preview">
+            
+            <!-- FECHA DE FOTO -->
+            <div class="form-group">
+                <label for="fechaFoto">📅 Fecha de la foto (en caso de ser antigua):</label>
+                <input type="date" id="fechaFoto" name="fecha_foto" value="{{ today }}">
+            </div>
+            
+            <!-- TIPO DE FOTO -->
+            <div class="form-group">
+                <label for="etiqueta">🏷️ Tipo de foto:</label>
+                <select name="etiqueta" id="etiqueta">
+                    {% for value, label in etiquetas %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- COMENTARIO -->
+            <div class="form-group">
+                <label for="comentario">💬 Notas sobre la foto (opcional):</label>
+                <textarea name="comentario" id="comentario" placeholder="Ej: La planta tiene un aspecto vigoroso, sin plagas visibles..."></textarea>
+            </div>
+            
+            <!-- HITO -->
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="es_hito" id="esHito" class="hito-checkbox">
+                    🏆 ¿Es un hito importante? (Primera flor, primer fruto, plaga, etc.)
+                </label>
+            </div>
+            
+            <!-- TIPO DE HITO (oculto hasta que seleccionen) -->
+            <div class="hito-container" id="hitoContainer">
+                <div class="form-group">
+                    <label for="tipoHito">¿Qué tipo de hito es?</label>
+                    <input type="text" name="tipo_hito" id="tipoHito" placeholder="Ej: Primera Flor, Primer Fruto, Plaga Detectada">
+                </div>
+            </div>
+            
+            <!-- ACCIONES -->
+            <div class="form-actions">
+                <button type="submit" class="btn-subir" id="btnSubir" disabled>
+                    ✓ Subir Foto
+                </button>
+                <a href="{% url 'galeria_plantacion' plantacion.id %}" class="btn-cancelar">
+                    ← Volver
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const imagenInput = document.getElementById('imagenInput');
+    const imagenPreview = document.getElementById('imagenPreview');
+    const btnSubir = document.getElementById('btnSubir');
+    const esHito = document.getElementById('esHito');
+    const hitoContainer = document.getElementById('hitoContainer');
+    const fechaFoto = document.getElementById('fechaFoto');
+    
+    // Establecer fecha actual por defecto
+    const hoy = new Date().toISOString().split('T')[0];
+    fechaFoto.value = hoy;
+    
+    // Click en la zona de arrastre
+    dropZone.addEventListener('click', () => imagenInput.click());
+    
+    // Drag & Drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            imagenInput.files = files;
+            mostrarPreview();
+        }
+    });
+    
+    // Cambio en el input de archivo
+    imagenInput.addEventListener('change', mostrarPreview);
+    
+    function mostrarPreview() {
+        const file = imagenInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagenPreview.src = e.target.result;
+                imagenPreview.classList.add('visible');
+                btnSubir.disabled = false;
+                dropZone.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    // Mostrar/ocultar contenedor de hito
+    esHito.addEventListener('change', () => {
+        hitoContainer.classList.toggle('visible', esHito.checked);
+    });
+    
+    // Envío del formulario
+    document.getElementById('formulario-foto').addEventListener('submit', function(e) {
+        if (!imagenInput.files.length) {
+            e.preventDefault();
+            alert('Por favor, selecciona una foto');
+        }
+    });
+</script>
+{% endblock %}

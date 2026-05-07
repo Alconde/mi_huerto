@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  :root {
+    --verde-oscuro: #2e7d32;
+    --verde-medio: #4caf50;
+    --verde-claro: #e8f5e9;
+    --verde-fondo: #f6fbf6;
+    --gris-borde: #d7e2d8;
+    --gris-texto: #4b5563;
+    --radio: 1rem;
+  }
+
+  .botica-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .botica-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .botica-title {
+    color: var(--verde-oscuro);
+    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .botica-subtitle {
+    color: #6b7280;
+    margin-bottom: 0;
+  }
+
+  .botica-card {
+    border: none;
+    border-radius: 1.25rem;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .botica-card-header {
+    background: linear-gradient(135deg, #2e7d32, #4caf50);
+    color: white;
+    padding: 1.1rem 1.4rem;
+  }
+
+  .botica-card-header h2 {
+    font-size: 1.1rem;
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .botica-card-body {
+    padding: 1.4rem;
+    background: white;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 1.3rem 0 0.8rem;
+  }
+
+  .section-title span {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .section-title hr {
+    flex: 1;
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 0;
+  }
+
+  .form-label {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #374151;
+    margin-bottom: 0.35rem;
+  }
+
+  .form-control,
+  .form-select,
+  textarea.form-control {
+    border-radius: 0.8rem !important;
+    border: 1.5px solid #d1d5db !important;
+    padding: 0.65rem 0.85rem !important;
+    font-size: 0.92rem !important;
+    box-shadow: none !important;
+  }
+
+  .form-control:focus,
+  .form-select:focus,
+  textarea.form-control:focus {
+    border-color: var(--verde-medio) !important;
+    box-shadow: 0 0 0 3px rgba(76,175,80,0.12) !important;
+  }
+
+  .field-error {
+    color: #b91c1c;
+    font-size: 0.82rem;
+    margin-top: 0.3rem;
+  }
+
+  .field-help {
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+  }
+
+  .sidebar-box {
+    background: var(--verde-fondo);
+    border: 1px solid var(--gris-borde);
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .sidebar-box h5 {
+    color: var(--verde-oscuro);
+    font-size: 0.95rem;
+    font-weight: 800;
+    margin-bottom: 0.8rem;
+  }
+
+  .sidebar-box p,
+  .sidebar-box li {
+    font-size: 0.88rem;
+    color: var(--gris-texto);
+  }
+
+  .sidebar-box ul {
+    padding-left: 1rem;
+    margin-bottom: 0;
+  }
+
+  .form-check-input {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .btn-botica {
+    background: var(--verde-oscuro);
+    border: none;
+    color: white;
+    border-radius: 0.8rem;
+    padding: 0.65rem 1.2rem;
+    font-weight: 700;
+  }
+
+  .btn-botica:hover {
+    background: #1f5d24;
+    color: white;
+  }
+</style>
+
+<div class="botica-wrap">
+  <div class="botica-header">
+    <div>
+      <h1 class="botica-title">🧪 {{ titulo }}</h1>
+      <p class="botica-subtitle">Guarda fórmulas útiles, dosis, periodicidades y advertencias de tu botica ecológica.</p>
+    </div>
+    <a href="{% url 'lista_botica' %}" class="btn btn-outline-secondary">Volver a la botica</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="botica-card">
+        <div class="botica-card-header">
+          <h2>Ficha del remedio</h2>
+        </div>
+        <div class="botica-card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger rounded-4 mb-3">
+              {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            {% if form.errors %}
+            <div class="alert alert-danger rounded-4 mb-4">
+              <strong>Revisa los errores del formulario.</strong>
+            </div>
+            {% endif %}
+
+            <div class="section-title"><span>Identificación</span><hr></div>
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label" for="{{ form.nombre.id_for_label }}">Nombre</label>
+                {{ form.nombre }}
+                {% if form.nombre.help_text %}<div class="field-help">{{ form.nombre.help_text }}</div>{% endif %}
+                {% if form.nombre.errors %}<div class="field-error">{{ form.nombre.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label" for="{{ form.tipo.id_for_label }}">Tipo</label>
+                {{ form.tipo }}
+                {% if form.tipo.errors %}<div class="field-error">{{ form.tipo.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="{{ form.objetivo.id_for_label }}">Objetivo</label>
+                {{ form.objetivo }}
+                {% if form.objetivo.help_text %}<div class="field-help">{{ form.objetivo.help_text }}</div>{% endif %}
+                {% if form.objetivo.errors %}<div class="field-error">{{ form.objetivo.errors }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="section-title"><span>Preparación</span><hr></div>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label" for="{{ form.ingredientes.id_for_label }}">Ingredientes</label>
+                {{ form.ingredientes }}
+                {% if form.ingredientes.errors %}<div class="field-error">{{ form.ingredientes.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="{{ form.preparacion.id_for_label }}">Preparación</label>
+                {{ form.preparacion }}
+                {% if form.preparacion.errors %}<div class="field-error">{{ form.preparacion.errors }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="section-title"><span>Uso</span><hr></div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="{{ form.dosis.id_for_label }}">Dosis</label>
+                {{ form.dosis }}
+                {% if form.dosis.errors %}<div class="field-error">{{ form.dosis.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label" for="{{ form.modo_aplicacion.id_for_label }}">Modo de aplicación</label>
+                {{ form.modo_aplicacion }}
+                {% if form.modo_aplicacion.errors %}<div class="field-error">{{ form.modo_aplicacion.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label" for="{{ form.periodicidad.id_for_label }}">Periodicidad</label>
+                {{ form.periodicidad }}
+                {% if form.periodicidad.errors %}<div class="field-error">{{ form.periodicidad.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="{{ form.momento_ideal.id_for_label }}">Momento ideal de aplicación</label>
+                {{ form.momento_ideal }}
+                {% if form.momento_ideal.errors %}<div class="field-error">{{ form.momento_ideal.errors }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="section-title"><span>Precauciones</span><hr></div>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label" for="{{ form.advertencias.id_for_label }}">Advertencias</label>
+                {{ form.advertencias }}
+                {% if form.advertencias.help_text %}<div class="field-help">{{ form.advertencias.help_text }}</div>{% endif %}
+                {% if form.advertencias.errors %}<div class="field-error">{{ form.advertencias.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="{{ form.notas.id_for_label }}">Notas personales</label>
+                {{ form.notas }}
+                {% if form.notas.errors %}<div class="field-error">{{ form.notas.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-12">
+                <div class="form-check mt-2">
+                  {{ form.activo }}
+                  <label class="form-check-label ms-2" for="{{ form.activo.id_for_label }}">
+                    Remedio activo en la botica
+                  </label>
+                </div>
+                {% if form.activo.errors %}<div class="field-error">{{ form.activo.errors }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-botica">
+                {% if remedio %}💾 Guardar cambios{% else %}➕ Crear remedio{% endif %}
+              </button>
+              <a href="{% url 'lista_botica' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="sidebar-box">
+        <h5>💡 Qué conviene guardar</h5>
+        <ul>
+          <li>Dosis real que te funciona, no solo la teórica.</li>
+          <li>En qué problema lo usas: pulgón, hongos, vigor, prevención.</li>
+          <li>Cuándo lo aplicas: tarde, tras lluvia, con calor, etc.</li>
+          <li>Precauciones para evitar quemaduras o mezclas malas.</li>
+        </ul>
+      </div>
+
+      <div class="sidebar-box">
+        <h5>🌿 Consejo ecológico</h5>
+        <p class="mb-0">
+          Un remedio natural funciona mejor si registras también el contexto de uso. En ecológico no basta con “qué aplicar”, sino saber cuándo repetir, qué evitar y en qué cultivos te ha ido mejor. [cite:1]
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .aplicacion-wrap {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .aplicacion-card {
+    border: none;
+    border-radius: 1.2rem;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .aplicacion-card-header {
+    background: linear-gradient(135deg, #2e7d32, #4caf50);
+    color: white;
+    padding: 1rem 1.3rem;
+  }
+
+  .aplicacion-card-body {
+    padding: 1.4rem;
+    background: white;
+  }
+
+  .form-label {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #374151;
+    margin-bottom: 0.35rem;
+  }
+
+  .field-error {
+    color: #b91c1c;
+    font-size: 0.82rem;
+    margin-top: 0.3rem;
+  }
+
+  .field-help {
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+  }
+
+  .resumen-remedio {
+    background: #f6fbf6;
+    border: 1px solid #dbe8dc;
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn-verde {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 0.8rem;
+    padding: 0.65rem 1.1rem;
+    font-weight: 700;
+  }
+
+  .btn-verde:hover {
+    background: #1f5d24;
+    color: white;
+  }
+</style>
+
+<div class="aplicacion-wrap">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+      <h1 class="mb-1" style="color:#2e7d32; font-weight:800;">📝 {{ titulo }}</h1>
+      <p class="text-muted mb-0">Anota cuándo lo aplicaste, sobre qué cultivo y qué resultado observaste.</p>
+    </div>
+    <a href="{% url 'detalle_remedio_botica' remedio.pk %}" class="btn btn-outline-secondary">Volver a la ficha</a>
+  </div>
+
+  <div class="resumen-remedio">
+    <div><strong>Remedio:</strong> {{ remedio.nombre }}</div>
+    <div><strong>Tipo:</strong> {{ remedio.get_tipo_display }}</div>
+    <div><strong>Dosis orientativa:</strong> {{ remedio.dosis|default:"No indicada" }}</div>
+  </div>
+
+  <div class="aplicacion-card">
+    <div class="aplicacion-card-header">
+      <h5 class="mb-0">Registro de aplicación</h5>
+    </div>
+    <div class="aplicacion-card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger rounded-4 mb-3">
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="{{ form.fecha_aplicacion.id_for_label }}">Fecha</label>
+            {{ form.fecha_aplicacion }}
+            {% if form.fecha_aplicacion.errors %}<div class="field-error">{{ form.fecha_aplicacion.errors }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="{{ form.cultivo.id_for_label }}">Cultivo</label>
+            {{ form.cultivo }}
+            {% if form.cultivo.errors %}<div class="field-error">{{ form.cultivo.errors }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="{{ form.parcela.id_for_label }}">Parcela</label>
+            {{ form.parcela }}
+            {% if form.parcela.errors %}<div class="field-error">{{ form.parcela.errors }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.problema_detectado.id_for_label }}">Problema detectado</label>
+            {{ form.problema_detectado }}
+            {% if form.problema_detectado.help_text %}<div class="field-help">{{ form.problema_detectado.help_text }}</div>{% endif %}
+            {% if form.problema_detectado.errors %}<div class="field-error">{{ form.problema_detectado.errors }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.dosis_aplicada.id_for_label }}">Dosis aplicada</label>
+            {{ form.dosis_aplicada }}
+            {% if form.dosis_aplicada.errors %}<div class="field-error">{{ form.dosis_aplicada.errors }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.condiciones.id_for_label }}">Condiciones</label>
+            {{ form.condiciones }}
+            {% if form.condiciones.errors %}<div class="field-error">{{ form.condiciones.errors }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="{{ form.resultado.id_for_label }}">Resultado observado</label>
+            {{ form.resultado }}
+            {% if form.resultado.errors %}<div class="field-error">{{ form.resultado.errors }}</div>{% endif %}
+          </div>
+
+          <div class="col-12">
+            <div class="form-check mt-2">
+              {{ form.repetir }}
+              <label class="form-check-label ms-2" for="{{ form.repetir.id_for_label }}">
+                Conviene repetir este tratamiento
+              </label>
+            </div>
+            {% if form.repetir.errors %}<div class="field-error">{{ form.repetir.errors }}</div>{% endif %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="{{ form.observaciones.id_for_label }}">Observaciones</label>
+            {{ form.observaciones }}
+            {% if form.observaciones.errors %}<div class="field-error">{{ form.observaciones.errors }}</div>{% endif %}
+          </div>
+        </div>
+        <div class="col-12">
+            <hr class="my-4">
+            <h6 class="mb-3" style="color: #2e7d32; font-weight: 700;">Seguimiento automático</h6>
+            <p class="text-muted small mb-3">
+                Si marcas esta opción, se creará automáticamente una tarea futura para revisar el efecto del tratamiento.
+            </p>
+            </div>
+
+            <div class="col-12">
+            <div class="form-check">
+                {{ form.crear_seguimiento }}
+                <label class="form-check-label ms-2" for="{{ form.crear_seguimiento.id_for_label }}">
+                Crear tarea de seguimiento
+                </label>
+            </div>
+            {% if form.crear_seguimiento.errors %}<div class="field-error">{{ form.crear_seguimiento.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-4">
+            <label class="form-label" for="{{ form.dias_hasta_seguimiento.id_for_label }}">Días hasta el seguimiento</label>
+            {{ form.dias_hasta_seguimiento }}
+            {% if form.dias_hasta_seguimiento.help_text %}<div class="field-help">{{ form.dias_hasta_seguimiento.help_text }}</div>{% endif %}
+            {% if form.dias_hasta_seguimiento.errors %}<div class="field-error">{{ form.dias_hasta_seguimiento.errors }}</div>{% endif %}
+        </div>
+
+        <div class="mt-4 d-flex gap-2 flex-wrap">
+          <button type="submit" class="btn btn-verde">
+            {% if aplicacion %}💾 Guardar cambios{% else %}➕ Registrar aplicación{% endif %}
+          </button>
+          <a href="{% url 'detalle_remedio_botica' remedio.pk %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

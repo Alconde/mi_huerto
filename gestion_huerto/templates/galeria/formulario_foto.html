@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} - {{ plantacion.cultivo.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .formulario-foto {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 700px;
+        margin: 2rem auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .formulario-foto h1 {
+        color: #2e7d32;
+        margin-top: 0;
+        text-align: center;
+    }
+    
+    .badge-plantacion {
+        background: #f0f4c3;
+        color: #558b2f;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .drop-zone {
+        border: 3px dashed #2e7d32;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        background: #f5f5f5;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+    
+    .drop-zone:hover {
+        background: #e8f5e9;
+        border-color: #558b2f;
+    }
+    
+    .drop-zone.dragover {
+        background: #c8e6c9;
+        border-color: #2e7d32;
+        transform: scale(1.02);
+    }
+    
+    .drop-zone-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .drop-zone-text {
+        color: #333;
+        font-size: 1.1rem;
+    }
+    
+    .drop-zone-subtext {
+        color: #999;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .imagen-preview-container {
+        margin: 1.5rem 0;
+        display: none;
+    }
+    
+    .imagen-preview-container.visible {
+        display: block;
+    }
+    
+    .imagen-preview {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    
+    .preview-actual {
+        text-align: center;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-group input[type="file"],
+    .form-group input[type="date"],
+    .form-group input[type="text"],
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #2e7d32;
+        box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+    }
+    
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+        width: auto;
+        cursor: pointer;
+    }
+    
+    .hito-opciones {
+        background: #fff3cd;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        display: none;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .hito-opciones.visible {
+        display: block;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-guardar {
+        background: #4CAF50;
+        color: white;
+    }
+    
+    .btn-guardar:hover {
+        background: #45a049;
+    }
+    
+    .btn-guardar:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .btn-cancelar {
+        background: #999;
+        color: white;
+    }
+    
+    .btn-cancelar:hover {
+        background: #777;
+    }
+    
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0;
+        color: #f44336;
+        font-size: 0.9rem;
+    }
+    
+    .errorlist li {
+        margin: 0.25rem 0;
+    }
+    
+    .form-error {
+        border-color: #f44336 !important;
+    }
+    
+    .help-text {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .info-box {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #1976d2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="formulario-foto">
+        <h1>{{ titulo }}</h1>
+        
+        {% if plantacion %}
+            <div class="badge-plantacion">
+                {{ plantacion.cultivo.emoji }} {{ plantacion.cultivo.nombre }} - {{ plantacion.parcela.nombre }}
+            </div>
+        {% else %}
+            <div class="badge-plantacion">
+                📷 Foto del huerto
+            </div>
+        {% endif %}
+        
+        {% if not es_edicion %}
+            <div class="info-box">
+                💡 Tip: Puedes arrastrar y soltar la foto aquí, o hacer clic para seleccionar.
+            </div>
+        {% endif %}
+        
+        <form method="POST" enctype="multipart/form-data" id="formularioFoto">
+            {% csrf_token %}
+            
+            <!-- IMAGEN -->
+            <div class="form-group">
+                {% if es_edicion and foto.imagen %}
+                    <div class="preview-actual">
+                        <strong>Foto actual:</strong>
+                        <img src="{{ foto.imagen.url }}" alt="Foto actual" style="max-width: 150px; max-height: 150px; border-radius: 4px; margin-top: 0.5rem;">
+                    </div>
+                {% endif %}
+                
+                {% if not es_edicion %}
+                    <label for="id_imagen">📸 Foto (Requerida)</label>
+                    <div class="drop-zone" id="dropZone">
+                        <div class="drop-zone-icon">📸</div>
+                        <div class="drop-zone-text">Arrastra tu foto aquí</div>
+                        <div class="drop-zone-subtext">o haz clic para seleccionar</div>
+                    </div>
+                    {{ form.imagen }}
+                {% else %}
+                    <label for="id_imagen">📸 Reemplazar foto (opcional)</label>
+                    {{ form.imagen }}
+                    <span class="help-text">Deja en blanco para mantener la foto actual</span>
+                {% endif %}
+                
+                {% if form.imagen.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.imagen.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                
+                <div class="imagen-preview-container" id="previewContainer">
+                    <img id="imagenPreview" class="imagen-preview" alt="Preview">
+                </div>
+            </div>
+            
+            <!-- FECHA -->
+            <div class="form-group">
+                <label for="id_fecha_foto">📅 Fecha de la foto</label>
+                {{ form.fecha_foto }}
+                {% if form.fecha_foto.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.fecha_foto.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <!-- ETIQUETA -->
+            <div class="form-group">
+                <label for="id_etiqueta">🏷️ Tipo de foto</label>
+                {{ form.etiqueta }}
+                {% if form.etiqueta.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.etiqueta.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <!-- COMENTARIO -->
+            <div class="form-group">
+                <label for="id_comentario">💬 Notas (opcional)</label>
+                {{ form.comentario }}
+                {% if form.comentario.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.comentario.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <!-- HITO -->
+            <div class="form-group">
+                <div class="checkbox-group">
+                    {{ form.es_hito }}
+                    <label for="id_es_hito" style="margin: 0; font-weight: normal;">
+                        🏆 ¿Es un hito importante?
+                    </label>
+                </div>
+            </div>
+            
+            <!-- TIPO HITO -->
+            <div class="hito-opciones" id="hitoOpciones">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="id_tipo_hito">Tipo de hito</label>
+                    {{ form.tipo_hito }}
+                    <span class="help-text">Ej: Primera Flor, Primer Fruto, Plaga Detectada</span>
+                    {% if form.tipo_hito.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.tipo_hito.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- ACCIONES -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-guardar" id="btnGuardar">
+                    ✓ Guardar Foto
+                </button>
+                {% if plantacion %}
+                    <a href="{% url 'galeria_plantacion' plantacion.id %}" class="btn btn-cancelar">
+                        ← Volver
+                    </a>
+                {% else %}
+                    <a href="{% url 'galeria_general' %}" class="btn btn-cancelar">
+                        ← Volver
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const imagenInput = document.getElementById('id_imagen');
+    const imagenPreview = document.getElementById('imagenPreview');
+    const previewContainer = document.getElementById('previewContainer');
+    const esHito = document.getElementById('id_es_hito');
+    const hitoOpciones = document.getElementById('hitoOpciones');
+    const btnGuardar = document.getElementById('btnGuardar');
+    const formularioFoto = document.getElementById('formularioFoto');
+    
+    // Mostrar/ocultar opciones de hito
+    esHito.addEventListener('change', () => {
+        hitoOpciones.classList.toggle('visible', esHito.checked);
+    });
+    
+    // Inicializar estado de hito si ya existe
+    if (esHito.checked) {
+        hitoOpciones.classList.add('visible');
+    }
+    
+    {% if not es_edicion %}
+    // Drag & Drop solo en modo creación
+    if (dropZone) {
+        dropZone.addEventListener('click', () => imagenInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                imagenInput.files = files;
+                mostrarPreview();
+            }
+        });
+    }
+    {% endif %}
+    
+    // Cambio en el input de archivo
+    imagenInput.addEventListener('change', mostrarPreview);
+    
+    function mostrarPreview() {
+        const file = imagenInput.files[0];
+        if (file) {
+            // Validar tipo de archivo
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor, selecciona un archivo de imagen válido');
+                imagenInput.value = '';
+                previewContainer.classList.remove('visible');
+                return;
+            }
+            
+            // Validar tamaño (máximo 10MB)
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert('La imagen es demasiado grande (máximo 10MB)');
+                imagenInput.value = '';
+                previewContainer.classList.remove('visible');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagenPreview.src = e.target.result;
+                previewContainer.classList.add('visible');
+                {% if not es_edicion %}
+                if (dropZone) {
+                    dropZone.style.display = 'none';
+                }
+                {% endif %}
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    // Validación al enviar
+    formularioFoto.addEventListener('submit', function(e) {
+        {% if not es_edicion %}
+        if (!imagenInput.files.length) {
+            e.preventDefault();
+            alert('Por favor, selecciona una foto');
+        }
+        {% endif %}
+    });
+</script>
+{% endblock %}

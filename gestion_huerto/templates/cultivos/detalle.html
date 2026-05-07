@@ -1,0 +1,631 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .ficha-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .ficha-header {
+        background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+    }
+    
+    .ficha-imagen {
+        flex-shrink: 0;
+    }
+    
+    .ficha-imagen img {
+        width: 150px;
+        height: 150px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .ficha-imagen .placeholder {
+        width: 150px;
+        height: 150px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        border: 3px dashed rgba(255, 255, 255, 0.3);
+    }
+    
+    .ficha-info {
+        flex: 1;
+    }
+    
+    .ficha-titulo {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .ficha-subtitulo {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 10px;
+    }
+
+    .ficha-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.15);
+        font-size: 0.85rem;
+        margin-right: 6px;
+        margin-bottom: 4px;
+    }
+    
+    .ficha-datos {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        font-size: 0.95rem;
+        margin-top: 10px;
+    }
+    
+    .ficha-dato {
+        padding: 5px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .ficha-dato-label {
+        font-weight: 600;
+        opacity: 0.9;
+    }
+    
+    .ficha-dato-valor {
+        opacity: 0.95;
+    }
+    
+    .ficha-botones {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-ficha {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-ficha:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-editar {
+        background: #ffc107;
+        color: white;
+    }
+    
+    .btn-editar:hover {
+        background: #ffb20a;
+        color: white;
+    }
+    
+    .btn-eliminar {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-eliminar:hover {
+        background: #c82333;
+        color: white;
+    }
+    
+    .btn-volver {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-volver:hover {
+        background: #5a6268;
+        color: white;
+    }
+    
+    .btn-nueva-tarea {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .btn-nueva-tarea:hover {
+        background: #138496;
+        color: white;
+    }
+    
+    .ficha-body {
+        background: white;
+        padding: 30px;
+        border-left: 1px solid #e0e0e0;
+        border-right: 1px solid #e0e0e0;
+    }
+    
+    .ficha-seccion {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 8px;
+        border-left: 4px solid #2e7d32;
+    }
+    
+    .ficha-seccion h5 {
+        color: #2e7d32;
+        font-weight: 600;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+    }
+    
+    .seccion-vacia {
+        color: #999;
+        font-style: italic;
+    }
+    
+    .ficha-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .ficha-tab {
+        padding: 12px 20px;
+        cursor: pointer;
+        background: #f9f9f9;
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #666;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .ficha-tab:hover {
+        background: #f0f0f0;
+    }
+    
+    .ficha-tab.active {
+        color: #2e7d32;
+        border-bottom-color: #2e7d32;
+        background: white;
+    }
+    
+    .ficha-tab-content {
+        display: none;
+    }
+    
+    .ficha-tab-content.active {
+        display: block;
+    }
+    
+    .ficha-footer {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 0 0 12px 12px;
+        border: 1px solid #e0e0e0;
+        border-top: none;
+        text-align: center;
+    }
+    
+    .plantaciones-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .plantaciones-list li {
+        padding: 10px;
+        background: white;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        border-left: 3px solid #2e7d32;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .plantaciones-list li small {
+        color: #999;
+    }
+    
+    @media (max-width: 768px) {
+        .ficha-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .ficha-datos {
+            grid-template-columns: 1fr;
+        }
+        
+        .ficha-botones {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="ficha-container mb-5">
+    <!-- ENCABEZADO CON DETALLES PRINCIPALES -->
+    <div class="ficha-header">
+        <!-- IMAGEN/EMOJI -->
+        <div class="ficha-imagen">
+            {% if cultivo.emoji %}
+                <div class="placeholder">{{ cultivo.emoji }}</div>
+            {% else %}
+                <div class="placeholder">🌱</div>
+            {% endif %}
+        </div>
+        
+        <!-- INFORMACIÓN DEL CULTIVO -->
+        <div class="ficha-info">
+            <div class="ficha-titulo">{{ cultivo.nombre }}</div>
+
+            <!-- chips de tipo, perenne, familia -->
+            <div class="mb-2">
+                <span class="ficha-chip">
+                    🌿 {{ cultivo.get_tipo_cultivo_display }}
+                </span>
+                {% if cultivo.es_perenne %}
+                <span class="ficha-chip">
+                    ♻️ Perenne
+                </span>
+                {% else %}
+                <span class="ficha-chip" style="background: rgba(255,255,255,0.25);">
+                    🌾 Anual
+                </span>
+                {% endif %}
+                {% if cultivo.familia %}
+                <span class="ficha-chip">
+                    👨‍👩‍👧 Familia: {{ cultivo.familia_label }}
+                </span>
+                {% endif %}
+                {% if cultivo.grupo_rotacion %}
+                <span class="ficha-chip">
+                    🔄 Grupo rotación: {{ cultivo.grupo_rotacion }}
+                </span>
+                {% endif %}
+            </div>
+
+            {% if cultivo.familia and not cultivo.familia_label %}
+                <div class="ficha-subtitulo">{{ cultivo.familia }}</div>
+            {% endif %}
+            
+            <div class="ficha-datos">
+                {% if cultivo.clasificacion_rotacion %}
+                <div class="ficha-dato">
+                    <div class="ficha-dato-label">🔄 Rotación:</div>
+                    <div class="ficha-dato-valor">{{ cultivo.clasificacion_rotacion }}</div>
+                </div>
+                {% endif %}
+                
+                {% if cultivo.requiere_trasplante %}
+                <div class="ficha-dato">
+                    <div class="ficha-dato-label">🌱 Trasplante:</div>
+                    <div class="ficha-dato-valor">{% if cultivo.requiere_trasplante %}Sí{% else %}No{% endif %}</div>
+                </div>
+                {% endif %}
+                
+                {% if cultivo.marco_plantacion %}
+                <div class="ficha-dato">
+                    <div class="ficha-dato-label">📐 Marco:</div>
+                    <div class="ficha-dato-valor">{{ cultivo.marco_plantacion }}</div>
+                </div>
+                {% endif %}
+                
+                {% if cultivo.distancia_plantas %}
+                <div class="ficha-dato">
+                    <div class="ficha-dato-label">📏 Distancia:</div>
+                    <div class="ficha-dato-valor">{{ cultivo.distancia_plantas }} cm</div>
+                </div>
+                {% endif %}
+                
+                {% if cultivo.meses_siembra %}
+                <div class="ficha-dato">
+                    <div class="ficha-dato-label">🗓️ Siembra:</div>
+                    <div class="ficha-dato-valor">Meses {{ cultivo.meses_siembra }}</div>
+                </div>
+                {% endif %}
+                
+                {% if cultivo.meses_recoleccion %}
+                <div class="ficha-dato">
+                    <div class="ficha-dato-label">🥕 Recolección:</div>
+                    <div class="ficha-dato-valor">Meses {{ cultivo.meses_recoleccion }}</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- BOTONES ACCIÓN -->
+            <div class="ficha-botones">
+                <a href="{% url 'editar_cultivo' cultivo.pk %}" class="btn-ficha btn-editar">
+                    ✏️ Editar
+                </a>
+                <a href="{% url 'eliminar_cultivo' cultivo.pk %}" class="btn-ficha btn-eliminar">
+                    🗑️ Borrar
+                </a>
+                <a href="{% url 'lista_cultivos' %}" class="btn-ficha btn-volver">
+                    ← Volver
+                </a>
+                <a href="{% url 'nueva_tarea' %}" class="btn-ficha btn-nueva-tarea">
+                    ➕ Nueva Tarea
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CONTENIDO CON PESTAÑAS -->
+    <div class="ficha-body">
+        <!-- PESTAÑAS -->
+        <div class="ficha-tabs">
+            <button class="ficha-tab active" data-tab="detalles-tab">📋 Detalles Oficiales</button>
+            <button class="ficha-tab" data-tab="tareas-tab">✅ Tareas Recomendadas</button>
+            {% if plantaciones %}
+            <button class="ficha-tab" data-tab="plantaciones-tab">🌿 Plantaciones Activas</button>
+            {% endif %}
+            {% if cultivo.ficha_frutal or cultivo.ficha_flor %}
+            <button class="ficha-tab" data-tab="ficha-especifica-tab">🌸 Datos específicos</button>
+            {% endif %}
+        </div>
+        
+        <!-- TAB 1: DETALLES OFICIALES -->
+        <div id="detalles-tab" class="ficha-tab-content active">
+            <!-- TEMPORADAS -->
+            {% if cultivo.epoca_siembra or cultivo.meses_siembra or cultivo.meses_trasplante or cultivo.meses_recoleccion %}
+            <div class="ficha-seccion">
+                <h5>📅 Temporadas</h5>
+                {% if cultivo.epoca_siembra %}
+                    <strong>Época siembra:</strong> {{ cultivo.epoca_siembra }}<br>
+                {% endif %}
+                {% if cultivo.meses_siembra %}
+                    <strong>Meses siembra:</strong> {{ cultivo.meses_siembra }}<br>
+                {% endif %}
+                {% if cultivo.meses_trasplante %}
+                    <strong>Meses trasplante:</strong> {{ cultivo.meses_trasplante }}<br>
+                    {% if 4 in cultivo.meses_trasplante_lista or 5 in cultivo.meses_trasplante_lista %}
+                    <div style="background: #fff4e5; color: #8b5d10; border: 1px solid #f5c26b; border-radius: 12px; padding: 12px; margin-top: 10px;">
+                        <strong>❄️ Riesgo de heladas:</strong> Este cultivo se trasplanta en abril o mayo. Protege los trasplantes tempranos con cubiertas, manta térmica o acolchado.
+                    </div>
+                    {% endif %}
+                {% endif %}
+                {% if cultivo.meses_recoleccion %}
+                    <strong>Meses recolección:</strong> {{ cultivo.meses_recoleccion }}<br>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- DATOS TÉCNICOS -->
+            {% if cultivo.marco_plantacion or cultivo.distancia_plantas or cultivo.distancia_lineas or cultivo.profundidad_siembra %}
+            <div class="ficha-seccion">
+                <h5>⚙️ Datos Técnicos</h5>
+                {% if cultivo.marco_plantacion %}
+                    <strong>Marco plantación:</strong> {{ cultivo.marco_plantacion }}<br>
+                {% endif %}
+                {% if cultivo.distancia_plantas %}
+                    <strong>Distancia plantas:</strong> {{ cultivo.distancia_plantas }} cm<br>
+                {% endif %}
+                {% if cultivo.distancia_lineas %}
+                    <strong>Distancia líneas:</strong> {{ cultivo.distancia_lineas }} cm<br>
+                {% endif %}
+                {% if cultivo.profundidad_siembra %}
+                    <strong>Profundidad siembra:</strong> {{ cultivo.profundidad_siembra }}<br>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- GERMINACIÓN -->
+            {% if cultivo.temp_min_germinacion or cultivo.temp_optima_germinacion or cultivo.temp_max_germinacion or cultivo.tiempo_germinacion %}
+            <div class="ficha-seccion">
+                <h5>🌡️ Germinación</h5>
+                {% if cultivo.temp_min_germinacion %}
+                    <strong>Temp. mín:</strong> {{ cultivo.temp_min_germinacion }}°C<br>
+                {% endif %}
+                {% if cultivo.temp_optima_germinacion %}
+                    <strong>Temp. óptima:</strong> {{ cultivo.temp_optima_germinacion }}°C<br>
+                {% endif %}
+                {% if cultivo.temp_max_germinacion %}
+                    <strong>Temp. máx:</strong> {{ cultivo.temp_max_germinacion }}°C<br>
+                {% endif %}
+                {% if cultivo.tiempo_germinacion %}
+                    <strong>Tiempo germinación:</strong> {{ cultivo.tiempo_germinacion }} días<br>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- RIEGO -->
+            {% if cultivo.riego %}
+            <div class="ficha-seccion">
+                <h5>💧 Riego</h5>
+                {{ cultivo.riego }}
+            </div>
+            {% endif %}
+            
+            <!-- ABONO -->
+            {% if cultivo.abono %}
+            <div class="ficha-seccion">
+                <h5>🥗 Abono</h5>
+                {{ cultivo.abono }}
+            </div>
+            {% endif %}
+            
+            <!-- PLAGAS Y ENFERMEDADES -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                {% if cultivo.plagas_comunes %}
+                <div class="ficha-seccion">
+                    <h5>🐛 Plagas</h5>
+                    {{ cultivo.plagas_comunes }}
+                </div>
+                {% endif %}
+                
+                {% if cultivo.enfermedades_comunes %}
+                <div class="ficha-seccion">
+                    <h5>🦠 Enfermedades</h5>
+                    {{ cultivo.enfermedades_comunes }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- MANTENIMIENTO -->
+            {% if cultivo.mantenimiento %}
+            <div class="ficha-seccion">
+                <h5>✂️ Mantenimiento</h5>
+                {{ cultivo.mantenimiento }}
+            </div>
+            {% endif %}
+            
+            <!-- OBSERVACIONES -->
+            {% if cultivo.observaciones %}
+            <div class="ficha-seccion">
+                <h5>📝 Observaciones</h5>
+                {{ cultivo.observaciones }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- TAB 2: TAREAS RECOMENDADAS -->
+        <div id="tareas-tab" class="ficha-tab-content">
+            <div class="ficha-seccion">
+                <h5>Tareas Recomendadas para {{ cultivo.nombre }}</h5>
+                <p class="seccion-vacia">
+                    ✅ Se recomienda realizar un seguimiento regular del riego<br>
+                    ✅ Revisar periódicamente plagas y enfermedades<br>
+                    ✅ Aplicar tratamientos preventivos según la época<br>
+                    ✅ Realizar mantenimiento de labores culturales
+                </p>
+                <a href="{% url 'nueva_tarea' %}" class="btn-ficha btn-nueva-tarea" style="margin-top: 15px;">
+                    ➕ Registrar Nueva Tarea
+                </a>
+            </div>
+        </div>
+        
+        <!-- TAB 3: PLANTACIONES ACTIVAS -->
+        {% if plantaciones %}
+        <div id="plantaciones-tab" class="ficha-tab-content">
+            <div class="ficha-seccion">
+                <h5>Plantaciones Activas de {{ cultivo.nombre }}</h5>
+                {% if plantaciones %}
+                    <ul class="plantaciones-list">
+                        {% for p in plantaciones %}
+                        <li>
+                            <div>
+                                <strong>{{ p.parcela.nombre }}</strong> 
+                                <small>(Fila {{ p.fila_inicio }}-{{ p.fila_fin }}, 
+                                        Columna {{ p.columna_inicio }}-{{ p.columna_fin }})</small>
+                                <br>
+                                <small>{{ p.cantidad }} plantas | 
+                                       Plantado: {{ p.fecha_plantacion|date:"d/m/Y" }} | 
+                                       Cosecha est: {{ p.fecha_cosecha_estimada|date:"d/m/Y" }}</small>
+                            </div>
+                            <span>
+                                {% if p.cosechada %}
+                                    <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">✓ Cosechada</span>
+                                {% else %}
+                                    <span style="background: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">🌱 Activa</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="seccion-vacia">No hay plantaciones activas para este cultivo</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- TAB 4: FICHA ESPECÍFICA FRUTAL / FLOR -->
+        {% if cultivo.ficha_frutal or cultivo.ficha_flor %}
+        <div id="ficha-especifica-tab" class="ficha-tab-content">
+            {% if cultivo.ficha_frutal %}
+            <div class="ficha-seccion">
+                <h5>🌳 Ficha frutal</h5>
+                {% with f=cultivo.ficha_frutal %}
+                    {% if f.variedad %}
+                        <strong>Variedad:</strong> {{ f.variedad }}<br>
+                    {% endif %}
+                    {% if f.portainjerto %}
+                        <strong>Portainjerto:</strong> {{ f.portainjerto }}<br>
+                    {% endif %}
+                    <strong>Polinización:</strong> {{ f.get_tipo_polinizacion_display }}<br>
+                    <strong>¿Necesita polinizador?:</strong> {% if f.necesita_polinizador %}Sí{% else %}No{% endif %}<br>
+                    {% if f.marco_plantacion_m %}
+                        <strong>Marco (m):</strong> {{ f.marco_plantacion_m }}<br>
+                    {% endif %}
+                    {% if f.tipo_poda %}
+                        <strong>Tipo de poda:</strong> {{ f.get_tipo_poda_display }}<br>
+                    {% endif %}
+                    {% if f.fecha_ultima_poda %}
+                        <strong>Última poda:</strong> {{ f.fecha_ultima_poda|date:"d/m/Y" }}<br>
+                    {% endif %}
+                    {% if f.observaciones %}
+                        <hr>
+                        <strong>Notas frutal:</strong><br>
+                        {{ f.observaciones }}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            {% endif %}
+
+            {% if cultivo.ficha_flor %}
+            <div class="ficha-seccion">
+                <h5>🌸 Ficha flor</h5>
+                {% with ff=cultivo.ficha_flor %}
+                    <strong>Función ecológica:</strong> {{ ff.get_funcion_ecologica_display }}<br>
+                    {% if ff.floracion_inicio %}
+                        <strong>Inicio floración:</strong> {{ ff.floracion_inicio|date:"d/m" }}<br>
+                    {% endif %}
+                    {% if ff.floracion_fin %}
+                        <strong>Fin floración:</strong> {{ ff.floracion_fin|date:"d/m" }}<br>
+                    {% endif %}
+                    <strong>¿Atrae polinizadores?:</strong> {% if ff.atrae_polinizadores %}Sí{% else %}No{% endif %}<br>
+                    {% if ff.observaciones %}
+                        <hr>
+                        <strong>Notas flor:</strong><br>
+                        {{ ff.observaciones }}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- PIE -->
+    <div class="ficha-footer">
+        Ficha actualizada: {{ "now"|date:"d/m/Y H:i" }}
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.ficha-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            
+            document.querySelectorAll('.ficha-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.ficha-tab-content').forEach(c => c.classList.remove('active'));
+            
+            this.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        });
+    });
+</script>
+{% endblock %}

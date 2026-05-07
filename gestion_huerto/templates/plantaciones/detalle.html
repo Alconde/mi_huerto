@@ -1,0 +1,821 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .detalle-header {
+        margin-bottom: 24px;
+    }
+
+    .detalle-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+    }
+
+    .detalle-header h1 {
+        font-size: 2rem;
+        margin: 0;
+        color: #2f5d34;
+        font-weight: 700;
+    }
+
+    .detalle-subtitle {
+        color: #6c757d;
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .detalle-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-soft {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: 0.2s ease;
+    }
+
+    .btn-soft-primary {
+        background: #e8f3ea;
+        color: #2f5d34;
+        border: 1px solid #cfe4d2;
+    }
+
+    .btn-soft-primary:hover {
+        background: #dceddf;
+        color: #24492a;
+    }
+
+    .btn-soft-danger {
+        background: #fdeaea;
+        color: #b02a37;
+        border: 1px solid #f6cfd3;
+    }
+
+    .btn-soft-danger:hover {
+        background: #fad9dd;
+        color: #92212d;
+    }
+
+    .btn-soft-dark {
+        background: #6c757d;
+        color: #fff;
+        border: 1px solid #6c757d;
+    }
+
+    .btn-soft-dark:hover {
+        background: #5a6268;
+        color: #fff;
+    }
+
+    .hero-card {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .hero-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    .hero-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2f5d34;
+        margin-bottom: 6px;
+    }
+
+    .hero-meta {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+
+    .datos-rapidos {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(140px, 1fr));
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .dato-card {
+        background: #fbfbfb;
+        border: 1px solid #ececec;
+        border-radius: 12px;
+        padding: 14px;
+        min-height: 92px;
+    }
+
+    .dato-label {
+        font-size: 0.75rem;
+        color: #7a7a7a;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .dato-valor {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #222;
+        line-height: 1.2;
+    }
+
+    .dato-valor small {
+        display: block;
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 500;
+        margin-top: 4px;
+    }
+
+    .estado-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #198754;
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+
+    .progreso-wrap {
+        margin-top: 10px;
+    }
+
+    .progreso-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 6px;
+    }
+
+    .progress {
+        height: 18px;
+        border-radius: 999px;
+        background-color: #e9ecef;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+
+    .resumen-rapido {
+        border-left: 1px solid #f0f0f0;
+        padding-left: 10px;
+    }
+
+    .resumen-rapido h4,
+    .side-card h4 {
+        font-size: 1rem;
+        color: #4a7c59;
+        margin-bottom: 14px;
+        font-weight: 700;
+    }
+
+    .resumen-item {
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .resumen-item strong {
+        color: #2b2b2b;
+    }
+
+    .chip-estado-cosecha {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #ffc107;
+        color: #212529;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    .panel-card,
+    .side-card {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .panel-body,
+    .side-body {
+        padding: 22px;
+    }
+
+    .nav-tabs {
+        border-bottom: 1px solid #e8e8e8;
+        padding: 0 18px;
+        gap: 8px;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        color: #666;
+        font-weight: 600;
+        padding: 14px 14px;
+        border-bottom: 3px solid transparent;
+        background: transparent;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #2f7d32;
+        border-bottom: 3px solid #2f7d32;
+        background: transparent;
+    }
+
+    .section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #2f5d34;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #777;
+        padding: 32px 16px;
+    }
+
+    .table thead th {
+        background: #f7f7f7;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+
+    .table td,
+    .table th {
+        vertical-align: middle;
+    }
+
+    .foto-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+    }
+
+    .foto-card {
+        border: 1px solid #ececec;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .foto-card img {
+        width: 100%;
+        height: 170px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .foto-card-body {
+        padding: 12px;
+    }
+
+    .foto-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 6px;
+    }
+
+    .kpi-cosecha {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .kpi-box {
+        background: #f8faf8;
+        border: 1px solid #e4eee4;
+        border-radius: 12px;
+        padding: 14px;
+    }
+
+    .kpi-box-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #7b8a7e;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .kpi-box-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2f5d34;
+    }
+
+    .acciones-laterales {
+        display: grid;
+        gap: 10px;
+    }
+
+    .acciones-laterales .btn {
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .acciones-tabla {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 992px) {
+        .hero-grid,
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .resumen-rapido {
+            border-left: none;
+            padding-left: 0;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 18px;
+        }
+
+        .datos-rapidos {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .kpi-cosecha {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .detalle-header-top {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .detalle-actions {
+            width: 100%;
+        }
+
+        .detalle-actions a {
+            text-align: center;
+        }
+
+        .datos-rapidos {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="detalle-header">
+    <div class="detalle-header-top">
+        <div>
+            <h1>Ficha de Plantación</h1>
+            <p class="detalle-subtitle">Seguimiento completo del cultivo desde la siembra hasta la cosecha.</p>
+        </div>
+
+        <div class="detalle-actions">
+            <a href="{% url 'editar_plantacion' plantacion.id %}" class="btn-soft btn-soft-primary">Editar</a>
+            <a href="{% url 'eliminar_plantacion' plantacion.id %}" class="btn-soft btn-soft-danger">Eliminar</a>
+            <a href="{% url 'lista_plantaciones' %}" class="btn-soft btn-soft-dark">Volver</a>
+        </div>
+    </div>
+</div>
+
+<div class="hero-card">
+    <div class="hero-grid">
+        <div>
+            <div class="hero-title">🌿 {{ plantacion.nombre_completo }}</div>
+            <div class="hero-meta">
+                Parcela {{ plantacion.parcela.nombre }} -
+                Filas {{ plantacion.fila_inicio }}-{{ plantacion.fila_fin }} -
+                Columnas {{ plantacion.columna_inicio }}-{{ plantacion.columna_fin }}
+            </div>
+
+            <div class="datos-rapidos">
+                <div class="dato-card">
+                    <div class="dato-label">
+                        {% if plantacion.fecha_siembra %}
+                            Siembra
+                        {% elif plantacion.fecha_trasplante %}
+                            Trasplante
+                        {% else %}
+                            Plantación
+                        {% endif %}
+                    </div>
+                    <div class="dato-valor">
+                        {% if plantacion.fecha_siembra %}
+                            {{ plantacion.fecha_siembra|date:"d/m/Y" }}
+                        {% elif plantacion.fecha_trasplante %}
+                            {{ plantacion.fecha_trasplante|date:"d/m/Y" }}
+                        {% elif plantacion.fecha_plantacion %}
+                            {{ plantacion.fecha_plantacion|date:"d/m/Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="dato-card">
+                    <div class="dato-label">Cosecha estimada</div>
+                    <div class="dato-valor">
+                        {% if plantacion.fecha_cosecha_estimada %}
+                            {{ plantacion.fecha_cosecha_estimada|date:"d/m/Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="dato-card">
+                    <div class="dato-label">Días de ciclo</div>
+                    <div class="dato-valor">
+                        {% if plantacion.dias_ciclo_actual is not None %}
+                            {{ plantacion.dias_ciclo_actual }}
+                            <small>
+                                {% if plantacion.fecha_siembra %}
+                                    (desde siembra)
+                                {% elif plantacion.fecha_trasplante %}
+                                    (desde trasplante)
+                                {% else %}
+                                    (sin fecha base)
+                                {% endif %}
+                            </small>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="dato-card">
+                    <div class="dato-label">Estado</div>
+                    <div class="dato-valor">
+                        <span class="estado-badge">{{ plantacion.get_estado_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progreso-wrap">
+                <div class="progreso-labels">
+                    <span>Progreso del cultivo</span>
+                    <span>{{ progreso.porcentaje }}%</span>
+                </div>
+                <div class="progress">
+                    <div
+                        class="progress-bar bg-success"
+                        role="progressbar"
+                        style="width: {{ progreso.porcentaje }}%;"
+                        aria-valuenow="{{ progreso.porcentaje }}"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                    >
+                        {{ progreso.etapa }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="resumen-rapido">
+            <h4>Resumen rápido</h4>
+
+            <div class="resumen-item">
+                <strong>Procedencia:</strong>
+                {{ plantacion.get_procedencia_display|default:"—" }}
+            </div>
+
+            <div class="resumen-item">
+                <strong>Cantidad:</strong>
+                {{ plantacion.cantidad|default:"—" }} uds.
+            </div>
+
+            <div class="resumen-item">
+                <strong>Distancia:</strong>
+                {% if plantacion.distancia_personalizada %}
+                    {{ plantacion.distancia_personalizada }} cm
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+
+            <div class="resumen-item">
+                <strong>Estado cosecha:</strong>
+                {% if plantacion.cosechada %}
+                    <span class="chip-estado-cosecha">Con cosechas</span>
+                {% else %}
+                    <span class="chip-estado-cosecha" style="background:#e9ecef; color:#495057;">Sin cosechas</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <div class="panel-card">
+        <ul class="nav nav-tabs" id="plantacionTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-pane" type="button" role="tab" aria-controls="resumen-pane" aria-selected="true">
+                    Resumen
+                </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tareas-tab" data-bs-toggle="tab" data-bs-target="#tareas-pane" type="button" role="tab" aria-controls="tareas-pane" aria-selected="false">
+                    Tareas ({{ tareas|length }})
+                </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tratamientos-tab" data-bs-toggle="tab" data-bs-target="#tratamientos-pane" type="button" role="tab" aria-controls="tratamientos-pane" aria-selected="false">
+                    Tratamientos (0)
+                </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cosechas-tab" data-bs-toggle="tab" data-bs-target="#cosechas-pane" type="button" role="tab" aria-controls="cosechas-pane" aria-selected="false">
+                    Cosechas ({{ cosechas|length }})
+                </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="fotos-tab" data-bs-toggle="tab" data-bs-target="#fotos-pane" type="button" role="tab" aria-controls="fotos-pane" aria-selected="false">
+                    Fotos ({{ fotos|length }})
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content panel-body" id="plantacionTabsContent">
+            <div class="tab-pane fade show active" id="resumen-pane" role="tabpanel" aria-labelledby="resumen-tab" tabindex="0">
+                <div class="section-title mb-3">Datos básicos</div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Cultivo:</strong> {{ plantacion.cultivo.nombre }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Variedad:</strong> {{ plantacion.variedad.nombre|default:"—" }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Parcela:</strong> {{ plantacion.parcela.nombre }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Modo de implantación:</strong> {{ plantacion.get_modo_implantacion_display }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Tipo de siembra:</strong> {{ plantacion.get_tipo_siembra_display }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Origen del plantel:</strong> {{ plantacion.origen_plantel|default:"—" }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Fecha siembra:</strong>
+                        {% if plantacion.fecha_siembra %}{{ plantacion.fecha_siembra|date:"d/m/Y" }}{% else %}—{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Fecha trasplante:</strong>
+                        {% if plantacion.fecha_trasplante %}{{ plantacion.fecha_trasplante|date:"d/m/Y" }}{% else %}—{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Germinado estimado:</strong>
+                        {% if plantacion.fecha_germinado_estimado %}{{ plantacion.fecha_germinado_estimado|date:"d/m/Y" }}{% else %}—{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Germinado real:</strong>
+                        {% if plantacion.fecha_germinado_real %}{{ plantacion.fecha_germinado_real|date:"d/m/Y" }}{% else %}—{% endif %}
+                    </div>
+                </div>
+
+                {% if plantacion.notas or plantacion.observaciones_seguimiento %}
+                    <hr>
+                    <div class="mb-3">
+                        <strong>Notas:</strong><br>
+                        {{ plantacion.notas|default:"—"|linebreaksbr }}
+                    </div>
+
+                    <div>
+                        <strong>Observaciones de seguimiento:</strong><br>
+                        {{ plantacion.observaciones_seguimiento|default:"—"|linebreaksbr }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="tareas-pane" role="tabpanel" aria-labelledby="tareas-tab" tabindex="0">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="section-title mb-0">Tareas de la plantación</div>
+                </div>
+
+                {% if tareas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tarea</th>
+                                    <th>Descripción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tarea in tareas %}
+                                <tr>
+                                    <td>{{ tarea.fecha|date:"d/m/Y" }}</td>
+                                    <td>{{ tarea.titulo|default:tarea.tipo_tarea|default:"Tarea" }}</td>
+                                    <td>{{ tarea.descripcion|default:"—" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">Todavía no hay tareas registradas para esta plantación.</div>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="tratamientos-pane" role="tabpanel" aria-labelledby="tratamientos-tab" tabindex="0">
+                <div class="section-title mb-3">Tratamientos registrados</div>
+                <div class="empty-state">Todavía no hay tratamientos registrados para esta plantación.</div>
+            </div>
+
+            <div class="tab-pane fade" id="cosechas-pane" role="tabpanel" aria-labelledby="cosechas-tab" tabindex="0">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="section-title mb-0">Registro de cosechas</div>
+                    <a href="{% url 'agregar_cosecha' plantacion.id %}" class="btn btn-sm btn-success">
+                        Añadir cosecha
+                    </a>
+                </div>
+
+                <div class="kpi-cosecha">
+                    <div class="kpi-box">
+                        <div class="kpi-box-label">Número de cosechas</div>
+                        <div class="kpi-box-value">{{ cosechas|length }}</div>
+                    </div>
+
+                    <div class="kpi-box">
+                        <div class="kpi-box-label">Cantidad acumulada</div>
+                        <div class="kpi-box-value">
+                            {% if plantacion.cantidad_cosechada %}
+                                {{ plantacion.cantidad_cosechada }} {{ plantacion.unidad_cosecha }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="kpi-box">
+                        <div class="kpi-box-label">Valor económico</div>
+                        <div class="kpi-box-value">€ {{ valor_total_cosechas|floatformat:2 }}</div>
+                    </div>
+                </div>
+
+                {% if cosechas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Cantidad</th>
+                                    <th>Unidad</th>
+                                    <th>Precio mercado</th>
+                                    <th>Valor total</th>
+                                    <th>Notas</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cosecha in cosechas %}
+                                <tr>
+                                    <td>{{ cosecha.fecha_cosecha|date:"d/m/Y" }}</td>
+                                    <td>{{ cosecha.cantidad }}</td>
+                                    <td>{{ cosecha.get_unidad_display }}</td>
+                                    <td>€ {{ cosecha.precio_unitario|default_if_none:0|floatformat:2 }}</td>
+                                    <td><strong>€ {{ cosecha.total|floatformat:2 }}</strong></td>
+                                    <td>{{ cosecha.notas|default:"—" }}</td>
+                                    <td>
+                                        <div class="acciones-tabla">
+                                            <a href="{% url 'editar_cosecha' cosecha.id %}" class="btn btn-sm btn-primary">Editar</a>
+                                            <a href="{% url 'eliminar_cosecha' cosecha.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        Todavía no hay cosechas registradas.
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="fotos-pane" role="tabpanel" aria-labelledby="fotos-tab" tabindex="0">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="section-title mb-0">Galería de fotos</div>
+                    <a href="{% url 'agregar_foto_plantacion' plantacion.id %}" class="btn btn-sm btn-success">
+                        Añadir foto
+                    </a>
+                </div>
+
+                {% if fotos %}
+                    <div class="foto-grid">
+                        {% for foto in fotos %}
+                        <div class="foto-card">
+                            {% if foto.imagen %}
+                                <img src="{{ foto.imagen.url }}" alt="Foto de {{ plantacion.nombre_completo }}">
+                            {% endif %}
+                            <div class="foto-card-body">
+                                <div class="foto-meta">
+                                    {{ foto.fecha_foto|date:"d/m/Y" }}
+                                    {% if foto.dias_ciclo %}
+                                        · Día {{ foto.dias_ciclo }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    {{ foto.descripcion|default:"Sin descripción" }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">Todavía no hay fotos registradas.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="side-card">
+        <div class="side-body">
+            <h4>Datos del cultivo</h4>
+
+            <div class="resumen-item">
+                <strong>Familia:</strong>
+                {{ plantacion.cultivo.familia.nombre|default:"—" }}
+            </div>
+
+            <div class="resumen-item">
+                <strong>Marco:</strong>
+                {{ plantacion.cultivo.marco_siembra|default:"—" }}
+            </div>
+
+            <div class="resumen-item">
+                <strong>Distancia recomendada:</strong>
+                {% if plantacion.cultivo.distancia_recomendada %}
+                    {{ plantacion.cultivo.distancia_recomendada }} cm
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+
+            <div class="resumen-item">
+                <strong>Requiere trasplante:</strong>
+                {% if plantacion.cultivo.requiere_trasplante %}
+                    Sí
+                {% else %}
+                    No
+                {% endif %}
+            </div>
+
+            <div class="resumen-item">
+                <strong>Riego:</strong>
+                {{ plantacion.cultivo.riego|default:"—" }}
+            </div>
+
+            <div class="resumen-item">
+                <strong>Abono:</strong>
+                {{ plantacion.cultivo.abono|default:"—" }}
+            </div>
+
+            <hr>
+
+            <h4>Acciones</h4>
+            <div class="acciones-laterales">
+                <a href="{% url 'editar_plantacion' plantacion.id %}" class="btn btn-primary">Editar plantación</a>
+                <a href="{% url 'agregar_cosecha' plantacion.id %}" class="btn btn-success">Registrar cosecha</a>
+                <a href="{% url 'agregar_foto_plantacion' plantacion.id %}" class="btn btn-outline-success">Añadir foto</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

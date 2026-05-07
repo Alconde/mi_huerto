@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">
+                {% if cultivo %}✏️ Editar Cultivo{% else %}🌱 Nuevo Cultivo{% endif %}
+            </h3>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" class="needs-validation">
+                {% csrf_token %}
+
+                <!-- TIPO DE CULTIVO Y ROTACIÓN -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">🌳 Tipo de cultivo y rotación</h5>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Tipo de cultivo</label>
+                        {{ form.tipo_cultivo }}
+                        <small class="text-muted d-block mt-1">
+                            Hortaliza, frutal o flor. Esto controla qué ficha aparece abajo.
+                        </small>
+                        {% if form.tipo_cultivo.errors %}
+                            <div class="invalid-feedback d-block">{{ form.tipo_cultivo.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">¿Es perenne?</label>
+                        <div class="form-check">
+                            {{ form.es_perenne }}
+                            <label class="form-check-label">Permanece varios años (frutal, aromática, etc.)</label>
+                        </div>
+                        {% if form.es_perenne.errors %}
+                            <div class="invalid-feedback d-block">{{ form.es_perenne.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Grupo de rotación</label>
+                        {{ form.grupo_rotacion }}
+                        <small class="text-muted d-block mt-1">
+                            Solo tiene sentido para hortalizas anuales.
+                        </small>
+                        {% if form.grupo_rotacion.errors %}
+                            <div class="invalid-feedback d-block">{{ form.grupo_rotacion.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- INFORMACIÓN BÁSICA -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">📋 Información Básica</h5>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Nombre *</label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}<div class="invalid-feedback d-block">{{ form.nombre.errors }}</div>{% endif %}
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Emoji</label>
+                        {{ form.emoji }}
+                        {% if form.emoji.errors %}<div class="invalid-feedback d-block">{{ form.emoji.errors }}</div>{% endif %}
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Familia</label>
+                        {{ form.familia }}
+                        {% if form.familia.errors %}<div class="invalid-feedback d-block">{{ form.familia.errors }}</div>{% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">¿Requiere Trasplante?</label>
+                        <div class="form-check">
+                            {{ form.requiere_trasplante }}
+                            <label class="form-check-label">Sí</label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label fw-bold">Clasificación Rotación</label>
+                        {{ form.clasificacion_rotacion }}
+                        <small class="text-muted">Ej: Solanácea, Cucurbitácea, Leguminosa, etc.</small>
+                        {% if form.clasificacion_rotacion.errors %}
+                            <div class="invalid-feedback d-block">{{ form.clasificacion_rotacion.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <!-- TEMPORADAS -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">📅 Temporadas (Calendario)</h5>
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <strong>Referencia de meses:</strong><br>
+                            <small class="text-muted">
+                                1=Ene, 2=Feb, 3=Mar, 4=Abr, 5=May, 6=Jun, 7=Jul, 8=Ago, 9=Sep, 10=Oct, 11=Nov, 12=Dic
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold">Época de Siembra</label>
+                        {{ form.epoca_siembra }}
+                        <small class="text-muted">Ej: Primavera-Verano</small>
+                        {% if form.epoca_siembra.errors %}
+                            <div class="invalid-feedback d-block">{{ form.epoca_siembra.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Meses Siembra 🌱</label>
+                        {{ form.meses_siembra }}
+                        <small class="text-muted d-block mt-2">Ingresa: 1,2,3</small>
+                        {% if form.meses_siembra.errors %}
+                            <div class="alert alert-danger mt-2 py-2 px-3">
+                                <strong>Error:</strong> {{ form.meses_siembra.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Meses Trasplante 🌿</label>
+                        {{ form.meses_trasplante }}
+                        <small class="text-muted d-block mt-2">Ingresa: 4,5</small>
+                        {% if form.meses_trasplante.errors %}
+                            <div class="alert alert-danger mt-2 py-2 px-3">
+                                <strong>Error:</strong> {{ form.meses_trasplante.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Meses Recolección 🥕</label>
+                        {{ form.meses_recoleccion }}
+                        <small class="text-muted d-block mt-2">Ingresa: 7,8,9,10</small>
+                        {% if form.meses_recoleccion.errors %}
+                            <div class="alert alert-danger mt-2 py-2 px-3">
+                                <strong>Error:</strong> {{ form.meses_recoleccion.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <!-- DATOS TÉCNICOS -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">⚙️ Datos Técnicos</h5>
+                    </div>
+                    
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold">Marco de Plantación</label>
+                        {{ form.marco_plantacion }}
+                        <small class="text-muted">Ej: 40x40 cm</small>
+                        {% if form.marco_plantacion.errors %}
+                            <div class="invalid-feedback d-block">{{ form.marco_plantacion.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Distancia entre Plantas (cm)</label>
+                        {{ form.distancia_plantas }}
+                        {% if form.distancia_plantas.errors %}
+                            <div class="invalid-feedback d-block">{{ form.distancia_plantas.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Distancia entre Líneas (cm)</label>
+                        {{ form.distancia_lineas }}
+                        {% if form.distancia_lineas.errors %}
+                            <div class="invalid-feedback d-block">{{ form.distancia_lineas.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Profundidad Siembra</label>
+                        {{ form.profundidad_siembra }}
+                        <small class="text-muted">Ej: 2-3 cm</small>
+                        {% if form.profundidad_siembra.errors %}
+                            <div class="invalid-feedback d-block">{{ form.profundidad_siembra.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <!-- GERMINACIÓN -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">🌡️ Germinación</h5>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Temp. Mín. Germinación (°C)</label>
+                        {{ form.temp_min_germinacion }}
+                        {% if form.temp_min_germinacion.errors %}
+                            <div class="invalid-feedback d-block">{{ form.temp_min_germinacion.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Temp. Óptima Germinación (°C)</label>
+                        {{ form.temp_optima_germinacion }}
+                        {% if form.temp_optima_germinacion.errors %}
+                            <div class="invalid-feedback d-block">{{ form.temp_optima_germinacion.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Temp. Máx. Germinación (°C)</label>
+                        {{ form.temp_max_germinacion }}
+                        {% if form.temp_max_germinacion.errors %}
+                            <div class="invalid-feedback d-block">{{ form.temp_max_germinacion.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Tiempo Germinación (días)</label>
+                        {{ form.tiempo_germinacion }}
+                        {% if form.tiempo_germinacion.errors %}
+                            <div class="invalid-feedback d-block">{{ form.tiempo_germinacion.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <!-- CUIDADOS DEL CULTIVO -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">🌿 Cuidados del Cultivo</h5>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">💧 Riego</label>
+                        {{ form.riego }}
+                        <small class="text-muted">Frecuencia y método recomendado</small>
+                        {% if form.riego.errors %}
+                            <div class="invalid-feedback d-block">{{ form.riego.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">🥗 Abono</label>
+                        {{ form.abono }}
+                        <small class="text-muted">Tipo y frecuencia de fertilización</small>
+                        {% if form.abono.errors %}
+                            <div class="invalid-feedback d-block">{{ form.abono.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold">✂️ Mantenimiento</label>
+                        {{ form.mantenimiento }}
+                        <small class="text-muted">Poda, tutorado, etc.</small>
+                        {% if form.mantenimiento.errors %}
+                            <div class="invalid-feedback d-block">{{ form.mantenimiento.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <!-- PLAGAS Y ENFERMEDADES -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">🐛 Plagas y Enfermedades</h5>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Plagas Comunes</label>
+                        {{ form.plagas_comunes }}
+                        <small class="text-muted">Principales plagas que afectan a este cultivo</small>
+                        {% if form.plagas_comunes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.plagas_comunes.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Enfermedades</label>
+                        {{ form.enfermedades_comunes }}
+                        <small class="text-muted">Enfermedades frecuentes</small>
+                        {% if form.enfermedades_comunes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.enfermedades_comunes.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+
+                <!-- OBSERVACIONES -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">📝 Observaciones</label>
+                        {{ form.observaciones }}
+                        {% if form.observaciones.errors %}
+                            <div class="invalid-feedback d-block">{{ form.observaciones.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- FICHA FRUTAL -->
+                <div id="bloque-frutal" class="row mb-4" style="display:none;">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">🌳 Datos del frutal</h5>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ ficha_frutal_form.variedad_frutal.label_tag }}
+                        {{ ficha_frutal_form.variedad_frutal }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ ficha_frutal_form.portainjerto.label_tag }}
+                        {{ ficha_frutal_form.portainjerto }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ ficha_frutal_form.tipo_polinizacion.label_tag }}
+                        {{ ficha_frutal_form.tipo_polinizacion }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ ficha_frutal_form.necesita_polinizador.label_tag }}
+                        <div class="form-check">
+                            {{ ficha_frutal_form.necesita_polinizador }}
+                            <label class="form-check-label">Sí</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ ficha_frutal_form.marco_plantacion_m.label_tag }}
+                        {{ ficha_frutal_form.marco_plantacion_m }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ ficha_frutal_form.tipo_poda.label_tag }}
+                        {{ ficha_frutal_form.tipo_poda }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ ficha_frutal_form.fecha_ultima_poda.label_tag }}
+                        {{ ficha_frutal_form.fecha_ultima_poda }}
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        {{ ficha_frutal_form.observaciones.label_tag }}
+                        {{ ficha_frutal_form.observaciones }}
+                    </div>
+                </div>
+
+                <!-- FICHA FLOR -->
+                <div id="bloque-flor" class="row mb-4" style="display:none;">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">🌸 Datos de la flor</h5>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ ficha_flor_form.funcion_ecologica.label_tag }}
+                        {{ ficha_flor_form.funcion_ecologica }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        {{ ficha_flor_form.floracion_inicio_mes.label_tag }}
+                        {{ ficha_flor_form.floracion_inicio_mes }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        {{ ficha_flor_form.floracion_fin_mes.label_tag }}
+                        {{ ficha_flor_form.floracion_fin_mes }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ ficha_flor_form.atrae_polinizadores.label_tag }}
+                        <div class="form-check">
+                            {{ ficha_flor_form.atrae_polinizadores }}
+                            <label class="form-check-label">Atrae polinizadores</label>
+                        </div>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        {{ ficha_flor_form.observaciones.label_tag }}
+                        {{ ficha_flor_form.observaciones }}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                
+                <!-- BOTONES -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        Guardar Cultivo
+                    </button>
+                    <a href="{% url 'lista_cultivos' %}" class="btn btn-light btn-lg">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0;
+    }
+    
+    h5 {
+        color: #2e7d32;
+        font-weight: 600;
+    }
+    
+    .form-control, .form-check-input, select {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px 12px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus, .form-check-input:focus, select:focus {
+        border-color: #2e7d32;
+        box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.25);
+    }
+    
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 10px 20px;
+        transition: all 0.3s;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    small.text-muted {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.85rem;
+    }
+</style>
+
+{% load static %}
+<script src="{% static 'js/selector_meses.js' %}"></script>
+
+<script>
+    function actualizarBloquesTipoCultivo() {
+        const tipoSelect = document.getElementById('id_tipo_cultivo');
+        const bloqueFrutal = document.getElementById('bloque-frutal');
+        const bloqueFlor = document.getElementById('bloque-flor');
+
+        if (!tipoSelect) return;
+
+        bloqueFrutal.style.display = 'none';
+        bloqueFlor.style.display = 'none';
+
+        if (tipoSelect.value === 'frutal') {
+            bloqueFrutal.style.display = 'flex';
+        } else if (tipoSelect.value === 'flor') {
+            bloqueFlor.style.display = 'flex';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        actualizarBloquesTipoCultivo();
+        const tipoSelect = document.getElementById('id_tipo_cultivo');
+        if (tipoSelect) {
+            tipoSelect.addEventListener('change', actualizarBloquesTipoCultivo);
+        }
+    });
+</script>
+{% endblock %}

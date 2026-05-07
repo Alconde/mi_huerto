@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- CABECERA -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Plan de Rotaciones</h1>
+            <p class="text-muted mb-0">
+                Recomendaciones de rotación por familia botánica y grupo de cultivo
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'rotaciones_parcelas' %}" class="btn btn-success">
+                Ver parcelas
+            </a>
+        </div>
+    </div>
+
+    <!-- BLOQUE 1: RESUMEN DEL SISTEMA -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Cómo funciona la rotación</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Regla 1:</strong> No repetir la misma familia botánica en la misma parcela.</p>
+            <p><strong>Regla 2:</strong> Intentar dejar 3-4 campañas antes de volver a la misma familia.</p>
+            <p><strong>Regla 3:</strong> Usar leguminosas como cultivo de mejora antes de cultivos exigentes.</p>
+        </div>
+    </div>
+
+    <!-- BLOQUE 2: SECUENCIA RECOMENDADA -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Secuencia recomendada</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3 mb-3">
+                    <div class="border rounded p-3 h-100">
+                        <h6>1. Leguminosas</h6>
+                        <p class="mb-0 text-muted">Habas, guisantes, judías</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="border rounded p-3 h-100">
+                        <h6>2. Hoja / Raíz</h6>
+                        <p class="mb-0 text-muted">Lechuga, acelga, zanahoria, col</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="border rounded p-3 h-100">
+                        <h6>3. Fruto</h6>
+                        <p class="mb-0 text-muted">Tomate, pimiento, calabacín</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="border rounded p-3 h-100">
+                        <h6>4. Bulbo / Limpieza</h6>
+                        <p class="mb-0 text-muted">Ajo, cebolla, puerro</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOQUE 3: TABLA DE RECOMENDACIONES -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Recomendaciones de cambio</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Grupo actual</th>
+                            <th>Qué aporta / consume</th>
+                            <th>Siguiente recomendado</th>
+                            <th>Evitar después</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Leguminosa</td>
+                            <td>Mejora nitrógeno</td>
+                            <td>Hoja / Fruto</td>
+                            <td>Otra leguminosa seguida</td>
+                        </tr>
+                        <tr>
+                            <td>Hoja / Raíz</td>
+                            <td>Consumo medio</td>
+                            <td>Fruto / Bulbo</td>
+                            <td>Misma familia</td>
+                        </tr>
+                        <tr>
+                            <td>Fruto</td>
+                            <td>Muy exigente</td>
+                            <td>Leguminosa / Bulbo</td>
+                            <td>Más fruto seguido</td>
+                        </tr>
+                        <tr>
+                            <td>Bulbo</td>
+                            <td>Limpieza y descanso</td>
+                            <td>Leguminosa / Hoja</td>
+                            <td>Más aliáceas seguidas</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOQUE 4: FAMILIAS BOTÁNICAS -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Familias botánicas de referencia</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for familia in familias_rotacion %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="border rounded p-3 h-100">
+                        <h6>{{ familia.nombre }}</h6>
+                        <p class="mb-1"><strong>Ejemplos:</strong> {{ familia.ejemplos }}</p>
+                        <p class="mb-0 text-muted"><strong>Evitar repetir:</strong> {{ familia.evitar }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOQUE 5: OBSERVACIONES ECOLÓGICAS -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Observaciones ecológicas</h5>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0-0">
+                >No repetir solanáceas en la misma parcela varios años seguidos.</l/li>
+                >Las leguminosas ayudan a recuperar fertilidad.</l/li>
+                >Los bulbos ayudan a cerrar el ciclo y limpiar la parcela.</l/li>
+                >Las crucíferas necesitan vigilar plagas de repetición.</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Foto - {{ plantacion.cultivo.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .confirmacion-borrado {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 600px;
+        margin: 3rem auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .confirmacion-borrado h1 {
+        color: #f44336;
+        margin-top: 0;
+        font-size: 1.8rem;
+    }
+    
+    .foto-preview {
+        margin: 1.5rem 0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    
+    .foto-preview img {
+        max-width: 100%;
+        max-height: 300px;
+        display: block;
+    }
+    
+    .info-texto {
+        color: #666;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin: 1.5rem 0;
+    }
+    
+    .plantacion-info {
+        background: #f0f4c3;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        color: #558b2f;
+        font-weight: 600;
+    }
+    
+    .acciones {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-eliminar {
+        background: #f44336;
+        color: white;
+        transition: background 0.3s;
+    }
+    
+    .btn-eliminar:hover {
+        background: #da190b;
+    }
+    
+    .btn-cancelar {
+        background: #999;
+        color: white;
+        transition: background 0.3s;
+    }
+    
+    .btn-cancelar:hover {
+        background: #777;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="confirmacion-borrado">
+        <h1>⚠️ Eliminar Foto</h1>
+        
+        {% if foto.imagen %}
+            <div class="foto-preview">
+                <img src="{{ foto.imagen.url }}" alt="Foto">
+            </div>
+        {% endif %}
+        
+        <div class="plantacion-info">
+            {{ plantacion.cultivo.emoji }} {{ plantacion.cultivo.nombre }} - {{ plantacion.parcela.nombre }}
+        </div>
+        
+        <div class="info-texto">
+            <p><strong>Fecha:</strong> {{ foto.fecha_foto|date:"j \d\e F \d\e Y" }}</p>
+            <p><strong>Tipo:</strong> {{ foto.get_etiqueta_display }}</p>
+            {% if foto.es_hito %}
+                <p><strong>Hito:</strong> {{ foto.tipo_hito }}</p>
+            {% endif %}
+        </div>
+        
+        <p style="color: #f44336; font-weight: 600; margin: 1.5rem 0;">
+            ¿Estás seguro de que deseas eliminar esta foto?<br>
+            <span style="font-size: 0.9rem;">Esta acción no se puede deshacer.</span>
+        </p>
+        
+        <div class="acciones">
+            <form method="POST" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-eliminar">
+                    🗑️ Sí, Eliminar
+                </button>
+            </form>
+            <a href="{% url 'detalle_foto' foto.id %}" class="btn btn-cancelar">
+                ← No, Volver
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

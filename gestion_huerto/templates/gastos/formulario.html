@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .formulario-container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .card-form {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    
+    .card-header-form {
+        background: linear-gradient(135deg, #d32f2f 0%, #f54646 100%);
+        color: white;
+        padding: 25px;
+    }
+    
+    .card-header-form h3 {
+        margin: 0;
+        font-size: 1.8rem;
+    }
+    
+    .card-body-form {
+        padding: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #d32f2f;
+        box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .form-row.full {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .help-text {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .botones-form {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .btn-guardar {
+        background: #d32f2f;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .btn-guardar:hover {
+        background: #b71c1c;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-cancelar {
+        background: #e0e0e0;
+        color: #333;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-cancelar:hover {
+        background: #d0d0d0;
+    }
+    
+    .info-box {
+        background: #e3f2fd;
+        border: 1px solid #90caf9;
+        padding: 15px;
+        border-radius: 6px;
+        color: #1565c0;
+        margin-bottom: 20px;
+    }
+    
+    .error-list {
+        background: #ffebee;
+        border: 1px solid #ef5350;
+        padding: 15px;
+        border-radius: 6px;
+        color: #c62828;
+        margin-bottom: 20px;
+    }
+    
+    .error-list ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    @media (max-width: 600px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .botones-form {
+            flex-direction: column;
+        }
+        
+        .btn-guardar,
+        .btn-cancelar {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="formulario-container">
+    <div class="card-form">
+        <div class="card-header-form">
+            <h3>{{ accion }} Gasto 💰</h3>
+        </div>
+        
+        <div class="card-body-form">
+            <!-- INFORMACIÓN -->
+            <div class="info-box">
+                ℹ️ Rellena todos los campos para registrar un nuevo gasto del huerto
+            </div>
+            
+            <!-- ERRORES -->
+            {% if form.non_field_errors %}
+            <div class="error-list">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+            
+            <!-- FORMULARIO -->
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- FILA 1: Fecha y Categoría -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.fecha_compra.id_for_label }}">
+                            {{ form.fecha_compra.label }} *
+                        </label>
+                        {{ form.fecha_compra }}
+                        {% if form.fecha_compra.errors %}
+                            <div class="error-list">{{ form.fecha_compra.errors }}</div>
+                        {% endif %}
+                        <div class="help-text">Fecha en que se realizó la compra</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.categoria.id_for_label }}">
+                            {{ form.categoria.label }} *
+                        </label>
+                        {{ form.categoria }}
+                        {% if form.categoria.errors %}
+                            <div class="error-list">{{ form.categoria.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- FILA 2: Concepto -->
+                <div class="form-row form-row.full">
+                    <div class="form-group">
+                        <label for="{{ form.concepto.id_for_label }}">
+                            {{ form.concepto.label }} *
+                        </label>
+                        {{ form.concepto }}
+                        {% if form.concepto.errors %}
+                            <div class="error-list">{{ form.concepto.errors }}</div>
+                        {% endif %}
+                        <div class="help-text">Descripción detallada del producto o servicio</div>
+                    </div>
+                </div>
+                
+                <!-- FILA 3: Coste y Cantidad -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.coste.id_for_label }}">
+                            {{ form.coste.label }} *
+                        </label>
+                        {{ form.coste }}
+                        {% if form.coste.errors %}
+                            <div class="error-list">{{ form.coste.errors }}</div>
+                        {% endif %}
+                        <div class="help-text">Precio unitario en euros</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.cantidad.id_for_label }}">
+                            {{ form.cantidad.label }}
+                        </label>
+                        {{ form.cantidad }}
+                        {% if form.cantidad.errors %}
+                            <div class="error-list">{{ form.cantidad.errors }}</div>
+                        {% endif %}
+                        <div class="help-text">Número de unidades compradas</div>
+                    </div>
+                </div>
+                
+                <!-- FILA 4: Lugar de Compra -->
+                <div class="form-row form-row.full">
+                    <div class="form-group">
+                        <label for="{{ form.lugar_compra.id_for_label }}">
+                            {{ form.lugar_compra.label }} *
+                        </label>
+                        {{ form.lugar_compra }}
+                        {% if form.lugar_compra.errors %}
+                            <div class="error-list">{{ form.lugar_compra.errors }}</div>
+                        {% endif %}
+                        <div class="help-text">Ej: Agrotop, Leroy Merlin, Mercado local, Online</div>
+                    </div>
+                </div>
+                
+                <!-- FILA 5: Notas -->
+                <div class="form-row form-row.full">
+                    <div class="form-group">
+                        <label for="{{ form.notas.id_for_label }}">
+                            {{ form.notas.label }}
+                        </label>
+                        {{ form.notas }}
+                        {% if form.notas.errors %}
+                            <div class="error-list">{{ form.notas.errors }}</div>
+                        {% endif %}
+                        <div class="help-text">Observaciones adicionales (opcional)</div>
+                    </div>
+                </div>
+
+                <!-- FILA 6: Ticket de Compra -->
+                <div class="form-row form-row.full">
+                    <div class="form-group">
+                        <label for="{{ form.ticket_foto.id_for_label }}">
+                            {{ form.ticket_foto.label }}
+                        </label>
+                        {{ form.ticket_foto }}
+                        {% if form.ticket_foto.errors %}
+                            <div class="error-list">{{ form.ticket_foto.errors }}</div>
+                        {% endif %}
+                        <div class="help-text">Sube la foto del ticket para conservar una prueba visual del precio real.</div>
+                        {% if gasto and gasto.ticket_foto %}
+                        <div style="margin-top: 12px;">
+                            <strong>Ticket actual:</strong><br>
+                            <img src="{{ gasto.ticket_foto.url }}" alt="Ticket de compra" style="max-width: 200px; border-radius: 8px; border: 1px solid #ddd; margin-top: 8px;" />
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- BOTONES -->
+                <div class="botones-form">
+                    <button type="submit" class="btn-guardar">
+                        ✅ Guardar Gasto
+                    </button>
+                    <a href="{% url 'lista_gastos' %}" class="btn-cancelar">
+                        ← Volver
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

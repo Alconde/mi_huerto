@@ -1,0 +1,468 @@
+# ===================================================================
+# EJEMPLOS DE TEMPLATES PARA PLANTACION CON PROGRESO Y FOTOS
+# ===================================================================
+# Copia estos ejemplos a tus templates según corresponda
+
+# ===================================================================
+# 1. TEMPLATE: plantaciones/detalle.html
+# ===================================================================
+# Muestra información completa con progreso visual
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ plantacion.nombre_completo }} - Detalle{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- ENCABEZADO CON INFORMACIÓN BÁSICA -->
+    <div class="row">
+        <div class="col-md-8">
+            <h1>{{ plantacion.nombre_completo }}</h1>
+            <p class="lead">
+                {{ plantacion.cultivo.emoji }} {{ plantacion.cultivo.nombre }}
+                {% if plantacion.variedad %}
+                    <small>({{ plantacion.variedad.nombre }})</small>
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-right">
+            <a href="{% url 'editar_plantacion' plantacion.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            <a href="{% url 'agregar_foto_plantacion' plantacion.id %}" class="btn btn-info">
+                <i class="fas fa-camera"></i> Agregar Foto
+            </a>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- SECCIÓN DE PROGRESO -->
+    {% if plantacion.fecha_siembra_real or plantacion.fecha_siembra_estimada %}
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">📈 Progreso del Ciclo</h5>
+            </div>
+            <div class="card-body">
+                {% with progreso=plantacion.calcular_progreso_ciclo %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Etapa Actual</h6>
+                            <p class="display-4">{{ progreso.porcentaje }}%</p>
+                            <p class="text-muted">{{ progreso.etapa }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Tiempo</h6>
+                            <p>
+                                <strong>{{ progreso.dias_transcurridos }}</strong> días desde siembra
+                                {% if progreso.dias_totales_estimados %}
+                                    <br>
+                                    <strong>{{ progreso.dias_totales_estimados }}</strong> días estimados
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- BARRA DE PROGRESO -->
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ progreso.porcentaje }}%; background-color: #28a745;"
+                             aria-valuenow="{{ progreso.porcentaje }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                            {{ progreso.porcentaje }}%
+                        </div>
+                    </div>
+                {% endwith %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- SECCIÓN DE INFORMACIÓN GENERAL -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">📍 Ubicación en Huerto</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Parcela:</strong> {{ plantacion.parcela.nombre }}</p>
+                    <p><strong>Posición:</strong> 
+                        Fila {{ plantacion.fila_inicio }}-{{ plantacion.fila_fin }}, 
+                        Columna A{{ plantacion.columna_inicio }}-{{ plantacion.columna_fin }}
+                    </p>
+                    <p><strong>Cantidad:</strong> {{ plantacion.cantidad }} plantas</p>
+                    {% if plantacion.invernadero or plantacion.semillero %}
+                        <p>
+                            {% if plantacion.invernadero %}
+                                <span class="badge badge-warning">🏠 Invernadero</span>
+                            {% endif %}
+                            {% if plantacion.semillero %}
+                                <span class="badge badge-success">🌱 Semillero</span>
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">🌱 Procedencia y Variedad</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong>Origen:</strong>
+                        {% if plantacion.procedencia == 'semilla_propia' %}
+                            <span class="badge badge-info">Semilla Propia</span>
+                        {% elif plantacion.procedencia == 'compra_local' %}
+                            <span class="badge badge-success">Compra Local</span>
+                        {% else %}
+                            {{ plantacion.get_procedencia_display }}
+                        {% endif %}
+                    </p>
+                    {% if plantacion.variedad %}
+                        <p><strong>Variedad:</strong> {{ plantacion.variedad.nombre }}</p>
+                        {% if plantacion.variedad.notas_locales %}
+                            <p><strong>Notas:</strong> {{ plantacion.variedad.notas_locales|truncatewords:20 }}</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN DE FECHAS -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">📅 Hitos del Ciclo</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>Siembra</h6>
+                    {% if plantacion.fecha_siembra_estimada %}
+                        <p><small>Estimada:</small> {{ plantacion.fecha_siembra_estimada|date:"d/m/Y" }}</p>
+                    {% endif %}
+                    {% if plantacion.fecha_siembra_real %}
+                        <p><small>Real:</small> <strong>{{ plantacion.fecha_siembra_real|date:"d/m/Y" }}</strong></p>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <h6>Germinación</h6>
+                    {% if plantacion.fecha_germinado_estimado %}
+                        <p><small>Estimada:</small> {{ plantacion.fecha_germinado_estimado|date:"d/m/Y" }}</p>
+                    {% endif %}
+                    {% if plantacion.fecha_germinado_real %}
+                        <p><small>Real:</small> <strong>{{ plantacion.fecha_germinado_real|date:"d/m/Y" }}</strong></p>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <h6>Trasplante</h6>
+                    {% if plantacion.fecha_trasplante %}
+                        <p>{{ plantacion.fecha_trasplante|date:"d/m/Y" }}</p>
+                    {% else %}
+                        <p class="text-muted">No registrado</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>Cosecha</h6>
+                    {% if plantacion.fecha_recoleccion_inicio %}
+                        <p>{{ plantacion.fecha_recoleccion_inicio|date:"d/m/Y" }}</p>
+                    {% elif plantacion.fecha_recoleccion_esperada %}
+                        <p>{{ plantacion.fecha_recoleccion_esperada|date:"d/m/Y" }}</p>
+                    {% else %}
+                        <p class="text-muted">Sin fecha</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN DE GALERÍA DE FOTOS -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row">
+                <div class="col">
+                    <h5 class="mb-0">📸 Histórico Fotográfico</h5>
+                </div>
+                <div class="col-auto">
+                    <a href="{% url 'agregar_foto_plantacion' plantacion.id %}" class="btn btn-sm btn-info">
+                        + Agregar Foto
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if fotos.exists %}
+                <div class="row">
+                    {% for foto in fotos %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <img src="{{ foto.imagen.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title">{{ foto.get_tipo_foto_display }}</h6>
+                                    <p class="card-text small">
+                                        📅 {{ foto.fecha_foto|date:"d/m/Y" }}<br>
+                                        🌱 Día {{ foto.dias_ciclo }}
+                                    </p>
+                                    {% if foto.descripcion %}
+                                        <p class="card-text small text-muted">
+                                            {{ foto.descripcion|truncatewords:10 }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer p-2 bg-light">
+                                    <a href="{% url 'eliminar_foto_plantacion' foto.id %}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar?')">
+                                        🗑️
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- PAGINACIÓN -->
+                {% if fotos.has_other_pages %}
+                    <nav>
+                        <ul class="pagination">
+                            {% if fotos.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?fotos_page=1">Primera</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?fotos_page={{ fotos.previous_page_number }}">Anterior</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in fotos.paginator.page_range %}
+                                {% if fotos.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="?fotos_page={{ num }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if fotos.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?fotos_page={{ fotos.next_page_number }}">Siguiente</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?fotos_page={{ fotos.paginator.num_pages }}">Última</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    📷 No hay fotos aún. <a href="{% url 'agregar_foto_plantacion' plantacion.id %}">Agrega la primera foto</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SECCIÓN DE COSECHAS -->
+    {% if cosechas %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">🥕 Cosechas Registradas</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cantidad</th>
+                            <th>Unidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cosecha in cosechas %}
+                            <tr>
+                                <td>{{ cosecha.fecha_cosecha|date:"d/m/Y" }}</td>
+                                <td>{{ cosecha.cantidad }}</td>
+                                <td>{{ cosecha.get_unidad_display }}</td>
+                                <td>{% if cosecha.precio_unitario %}{{ cosecha.precio_unitario }}€{% else %}—{% endif %}</td>
+                                <td>{% if cosecha.total %}{{ cosecha.total }}€{% else %}—{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- SECCIÓN DE NOTAS -->
+    {% if plantacion.notas %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">📝 Notas</h5>
+            </div>
+            <div class="card-body">
+                {{ plantacion.notas|linebreaks }}
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+
+# ===================================================================
+# 2. TEMPLATE: plantaciones/agregar_foto.html
+# ===================================================================
+
+{% extends 'base.html' %}
+
+{% block title %}Agregar Foto - {{ plantacion.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>📸 Agregar Foto a {{ plantacion.nombre_completo }}</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="{{ form.imagen.id_for_label }}">Imagen</label>
+                    {{ form.imagen }}
+                    {% if form.imagen.help_text %}
+                        <small class="form-text text-muted">{{ form.imagen.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="{{ form.fecha_foto.id_for_label }}">Fecha de la Foto</label>
+                        {{ form.fecha_foto }}
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label for="{{ form.tipo_foto.id_for_label }}">Tipo de Foto</label>
+                        {{ form.tipo_foto }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.dias_ciclo.id_for_label }}">Días del Ciclo (opcional)</label>
+                    {{ form.dias_ciclo }}
+                    <small class="form-text text-muted">Se calcula automáticamente si está vacío</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+                    {{ form.descripcion }}
+                    <small class="form-text text-muted">{{ form.descripcion.help_text }}</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary">💾 Guardar Foto</button>
+                <a href="{% url 'detalle_plantacion' plantacion.id %}" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+# ===================================================================
+# 3. TEMPLATE: plantaciones/lista_con_progreso.html
+# ===================================================================
+
+{% extends 'base.html' %}
+
+{% block title %}Plantaciones Activas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>🌱 Plantaciones Activas</h1>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'nueva_plantacion' %}" class="btn btn-success">+ Nueva Plantación</a>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="form-inline">
+                <label class="mr-2">Filtrar por cultivo:</label>
+                <select name="cultivo" class="form-control mr-2" onchange="this.form.submit()">
+                    <option value="">Todos los cultivos</option>
+                    {% for cultivo in cultivos %}
+                        <option value="{{ cultivo.id }}" {% if cultivo.id|stringformat:"s" == cultivo_seleccionado %}selected{% endif %}>
+                            {{ cultivo.emoji }} {{ cultivo.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- LISTA DE PLANTACIONES CON PROGRESO -->
+    {% for item in plantaciones_con_progreso %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <h5 class="card-title">
+                            {{ item.plantacion.cultivo.emoji }} 
+                            {{ item.plantacion.nombre_completo }}
+                        </h5>
+                        <small class="text-muted">{{ item.plantacion.parcela.nombre }}</small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar" role="progressbar"
+                                 style="width: {{ item.progreso.porcentaje }}%;"
+                                 aria-valuenow="{{ item.progreso.porcentaje }}"
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ item.progreso.porcentaje }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            {{ item.progreso.etapa }} 
+                            ({{ item.progreso.dias_transcurridos }}/{{ item.progreso.dias_totales_estimados }} días)
+                        </small>
+                    </div>
+
+                    <div class="col-md-3">
+                        <p class="mb-0">
+                            {% if item.plantacion.procedencia == 'semilla_propia' %}
+                                <span class="badge badge-info">🌱 Propia</span>
+                            {% elif item.plantacion.procedencia == 'compra_local' %}
+                                <span class="badge badge-success">🛒 Compra</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="col-md-2 text-right">
+                        <a href="{% url 'detalle_plantacion' item.plantacion.id %}" class="btn btn-sm btn-info">
+                            Ver Detalle
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="alert alert-info">
+            No hay plantaciones activas. <a href="{% url 'nueva_plantacion' %}">Crea una nueva</a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

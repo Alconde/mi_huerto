@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Foto - {{ plantacion.cultivo.nombre }} | Mi Huerto{% endblock %}
+
+{% block extra_css %}
+<style>
+    .foto-detalle-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+    
+    .foto-principal {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .foto-imagen-grande {
+        width: 100%;
+        display: block;
+    }
+    
+    .foto-info-panel {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+    }
+    
+    .header-info {
+        border-bottom: 2px solid #f0f4c3;
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .cultivo-nombre {
+        color: #2e7d32;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .parcela-nombre {
+        color: #666;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+    
+    .info-grupo {
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-etiqueta {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-valor {
+        font-size: 1.1rem;
+        color: #333;
+    }
+    
+    .badge-etiqueta {
+        display: inline-block;
+        background: #f0f4c3;
+        color: #558b2f;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+    
+    .badge-hito {
+        display: inline-block;
+        background: #ffd54f;
+        color: #333;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-top: 0.5rem;
+        margin-left: 0.5rem;
+    }
+    
+    .comentario-section {
+        background: #f5f5f5;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1.5rem;
+    }
+    
+    .comentario-titulo {
+        font-weight: 600;
+        color: #333;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .comentario-texto {
+        color: #555;
+        line-height: 1.6;
+        margin: 0;
+        font-style: italic;
+    }
+    
+    .navegacion-fotos {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #f0f4c3;
+    }
+    
+    .btn-navegar {
+        flex: 1;
+        padding: 0.75rem;
+        background: #2e7d32;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        font-weight: 600;
+        transition: background 0.3s;
+        font-size: 0.9rem;
+    }
+    
+    .btn-navegar:hover {
+        background: #1b5e20;
+    }
+    
+    .btn-navegar:disabled,
+    .btn-navegar.disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .btn-volver {
+        background: #666;
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background 0.3s;
+        color: white;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-volver:hover {
+        background: #444;
+    }
+    
+    .fotos-relacionadas {
+        margin-top: 2rem;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .fotos-relacionadas h3 {
+        color: #2e7d32;
+        margin-top: 0;
+    }
+    
+    .grid-relacionadas {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+    }
+    
+    .foto-relacionada {
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.3s;
+        aspect-ratio: 1;
+    }
+    
+    .foto-relacionada:hover {
+        transform: scale(1.05);
+    }
+    
+    .foto-relacionada img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    
+    @media (max-width: 1024px) {
+        .foto-detalle-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .foto-info-panel {
+            position: static;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .grid-relacionadas {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'galeria_plantacion' plantacion.id %}" class="btn-volver">
+        ← Volver a la galería
+    </a>
+    
+    <div class="foto-detalle-container">
+        <!-- FOTO PRINCIPAL -->
+        <div class="foto-principal">
+            <img src="{{ foto.imagen.url }}" alt="Foto" class="foto-imagen-grande">
+        </div>
+        
+        <!-- PANEL DE INFORMACIÓN -->
+        <div class="foto-info-panel">
+            <div class="header-info">
+                <h2 class="cultivo-nombre">
+                    {{ plantacion.cultivo.emoji }} {{ plantacion.cultivo.nombre }}
+                </h2>
+                <p class="parcela-nombre">{{ plantacion.parcela.nombre }}</p>
+            </div>
+            
+            <div class="info-grupo">
+                <div class="info-etiqueta">📅 Fecha</div>
+                    <div class="info-valor">{{ foto.fecha_foto|date:"j \d\e F \d\e Y" }}</div>
+            <div class="info-grupo">
+                <div class="info-etiqueta">🌱 Día del ciclo</div>
+                <div class="info-valor">Día {{ foto.dia_ciclo }}</div>
+            </div>
+            
+            <div class="info-grupo">
+                <div class="info-etiqueta">🏷️ Tipo</div>
+                <span class="badge-etiqueta">{{ foto.get_etiqueta_display }}</span>
+                {% if foto.es_hito %}
+                    <span class="badge-hito">🏆 {{ foto.tipo_hito }}</span>
+                {% endif %}
+            </div>
+            
+            {% if foto.comentario %}
+                <div class="comentario-section">
+                    <p class="comentario-titulo">💬 Notas:</p>
+                    <p class="comentario-texto">{{ foto.comentario }}</p>
+                </div>
+            {% endif %}
+            
+            <!-- ACCIONES -->
+            <div class="navegacion-fotos" style="border-top: 2px solid #f0f4c3; padding-top: 1.5rem; margin-top: 1.5rem;">
+                <a href="{% url 'editar_foto' foto.id %}" class="btn-navegar" style="background: #2196F3;">
+                    ✏️ Editar
+                </a>
+                <a href="{% url 'eliminar_foto' foto.id %}" class="btn-navegar" style="background: #f44336;">
+                    🗑️ Eliminar
+                </a>
+            </div>
+            
+            <!-- NAVEGACIÓN ENTRE FOTOS -->
+            {% if fotos_anteriores or fotos_posteriores %}
+                <div class="navegacion-fotos">
+                    {% if fotos_anteriores %}
+                        <a href="{% url 'detalle_foto' fotos_anteriores.id %}" class="btn-navegar">
+                            ← Anterior
+                        </a>
+                    {% else %}
+                        <button class="btn-navegar disabled" disabled>← Anterior</button>
+                    {% endif %}
+                    
+                    {% if fotos_posteriores %}
+                        <a href="{% url 'detalle_foto' fotos_posteriores.id %}" class="btn-navegar">
+                            Siguiente →
+                        </a>
+                    {% else %}
+                        <button class="btn-navegar disabled" disabled>Siguiente →</button>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- FOTOS RELACIONADAS -->
+    {% if fotos_relacionadas %}
+        <div class="fotos-relacionadas">
+            <h3>📸 Otras fotos de esta plantación</h3>
+            <div class="grid-relacionadas">
+                {% for foto_rel in fotos_relacionadas %}
+                    <a href="{% url 'detalle_foto' foto_rel.id %}" class="foto-relacionada">
+                        <img src="{{ foto_rel.imagen.url }}" alt="Foto del {{ foto_rel.fecha_foto|date:'d/m' }}">
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

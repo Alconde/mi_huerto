@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, var(--bg-light) 0%, var(--light-green) 100%);
+        padding: 50px 20px;
+        border-radius: 16px;
+        margin-bottom: 40px;
+        border: 2px solid var(--border-light);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .hero-title {
+        color: var(--primary-green);
+        font-weight: 900;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+    }
+
+    .hero-subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .section-label {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 30px;
+        font-weight: 700;
+    }
+
+    .section-label::before, .section-label::after {
+        content: "";
+        flex: 1;
+        border-bottom: 2px solid var(--border-light);
+        margin: 0 20px;
+    }
+
+    .module-card {
+        border: none;
+        border-radius: 14px;
+        transition: var(--transition-smooth);
+        background: #fff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .module-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .module-card:active {
+        transform: translateY(-4px);
+    }
+
+    .icon-wrapper {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 25px auto 15px auto;
+        font-size: 3rem;
+        transition: var(--transition-smooth);
+        position: relative;
+    }
+
+    .module-card:hover .icon-wrapper {
+        transform: scale(1.15) rotate(8deg);
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+    }
+
+    .card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .card-body h5 {
+        color: var(--text-dark);
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .card-body p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .card-footer-custom {
+        margin-top: auto;
+        padding: 15px 25px;
+        border-top: 2px solid var(--light-green);
+        text-align: left;
+    }
+
+    .card-footer-custom a {
+        text-decoration: none;
+        color: var(--primary-green);
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: var(--transition-smooth);
+    }
+
+    .card-footer-custom a:hover {
+        transform: translateX(4px);
+        color: var(--secondary-green);
+    }
+
+    .bg-cultivos { background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%); }
+    .bg-plantaciones { background: linear-gradient(135deg, #d7ccc8 0%, #bcaaa4 100%); }
+    .bg-tareas { background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%); }
+    .bg-plano { background: linear-gradient(135deg, #e1bee7 0%, #ce93d8 100%); }
+    .bg-tratamientos { background: linear-gradient(135deg, #ffe0b2 0%, #ffcc80 100%); }
+    .bg-resumen { background: linear-gradient(135deg, #cfd8dc 0%, #b0bec5 100%); }
+
+    .icon-wrapper::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        opacity: 0;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 0; transform: scale(1); }
+        50% { opacity: 0.1; transform: scale(1.05); }
+    }
+
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .status-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 6px;
+        background: var(--light-green);
+        font-size: 0.85rem;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-label {
+        color: var(--text-muted);
+        flex: 1;
+    }
+
+    .status-count {
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .mini-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .mini-list li {
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-light);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .mini-list li:last-child {
+        border-bottom: none;
+    }
+
+    .mini-list li strong {
+        color: var(--text-dark);
+    }
+</style>
+
+<div class="hero-section text-center">
+    <h1 class="hero-title">🌿 Mi Huerto Gestor</h1>
+    <p class="hero-subtitle">Cuaderno de campo digital para agricultura ecológica</p>
+</div>
+
+{% if seguimientos_pendientes %}
+<div class="alert alert-warning shadow-sm border-0 rounded-4 mb-4" style="background: #fff8e1; border: 1px solid #ffecb3;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+        <div>
+            <h4 class="mb-2" style="color: #f57c00;">🧪 Alerta de Botica</h4>
+            <p class="mb-0 text-muted">
+                Tienes {{ total_seguimientos_pendientes }} seguimiento{{ total_seguimientos_pendientes|pluralize }} pendiente{{ total_seguimientos_pendientes|pluralize }} de revisar.
+            </p>
+        </div>
+        <div class="text-end">
+            <a href="{% url 'lista_tareas' %}" class="btn btn-sm btn-primary">Ver tareas</a>
+        </div>
+    </div>
+    <div class="mt-3">
+        <ul class="mb-0" style="padding-left: 1.25rem; color: #333;">
+            {% for aplicacion in seguimientos_pendientes %}
+                <li class="mb-2">
+                    <strong>
+                        {% if aplicacion.tarea_seguimiento.fecha_proxima %}
+                            {{ aplicacion.tarea_seguimiento.fecha_proxima|date:"d/m/Y" }}
+                        {% else %}
+                            {{ aplicacion.tarea_seguimiento.fecha|date:"d/m/Y" }}
+                        {% endif %}
+                    </strong>
+                    - Revisar efecto de <strong>{{ aplicacion.remedio.nombre }}</strong>
+                    sobre "{{ aplicacion.problema_detectado }}"
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+<div class="section-label">
+    <span>📚 Explorar Módulos</span>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card module-card">
+            <div class="icon-wrapper bg-cultivos">🍅</div>
+            <div class="card-body text-center">
+                <h5>Catálogo de Cultivos</h5>
+                <p>Fichas técnicas, épocas de siembra y distancias de plantación.</p>
+            </div>
+            <div class="card-footer-custom">
+                <a href="{% url 'lista_cultivos' %}">Acceder <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card module-card">
+            <div class="icon-wrapper bg-plantaciones">🌾</div>
+            <div class="card-body text-center">
+                <h5>Plantaciones Activas</h5>
+                <p>Registro de qué hay plantado hoy y dónde en el huerto.</p>
+            </div>
+            <div class="card-footer-custom">
+                <a href="{% url 'lista_plantaciones' %}">Acceder <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card module-card">
+            <div class="icon-wrapper bg-tareas">📋</div>
+            <div class="card-body text-center">
+                <h5>Diario de Tareas</h5>
+                <p>Riegos, abonados y mantenimiento realizado.</p>
+            </div>
+            <div class="card-footer-custom">
+                <a href="{% url 'lista_tareas' %}">Acceder <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card module-card">
+            <div class="icon-wrapper bg-plano">🗺️</div>
+            <div class="card-body text-center">
+                <h5>Plano Interactivo</h5>
+                <p>Mapa visual de tus parcelas y los cultivos plantados.</p>
+            </div>
+            <div class="card-footer-custom">
+                <a href="{% url 'plano_huerto' %}">Acceder <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card module-card">
+            <div class="icon-wrapper bg-tratamientos">🧪</div>
+            <div class="card-body">
+                <h5 class="text-center mb-3">Actividad de Botica</h5>
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-3 pb-3" style="border-bottom: 2px solid var(--border-light);">
+                        <span class="text-muted">Remedios Activos</span>
+                        <span class="fw-bold badge" style="background: #e67e22;">{{ total_remedios }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-3" style="border-bottom: 2px solid var(--border-light);">
+                        <span class="text-muted">Seguimientos Pendientes</span>
+                        <span class="fw-bold badge bg-warning text-dark">{{ total_seguimientos_pendientes }}</span>
+                    </div>
+                    <div class="fw-bold mb-2 mt-2" style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px;">
+                        ÚLTIMAS APLICACIONES
+                    </div>
+                    {% if aplicaciones_recientes %}
+                    <ul class="mini-list">
+                        {% for aplicacion in aplicaciones_recientes|slice:":3" %}
+                        <li>
+                            <strong>{{ aplicacion.remedio.nombre }}</strong><br>
+                            <small>{{ aplicacion.fecha_aplicacion|date:"d/m/Y" }} - {{ aplicacion.problema_detectado|truncatewords:3 }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted small mb-0">Aún no hay aplicaciones registradas.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer-custom">
+                <a href="{% url 'lista_botica' %}">Ver botica completa <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card module-card">
+            <div class="icon-wrapper bg-resumen">📊</div>
+            <div class="card-body">
+                <h5 class="text-center mb-3">Estado del Huerto</h5>
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-3 pb-3" style="border-bottom: 2px solid var(--border-light);">
+                        <span class="text-muted">Cultivos Activos</span>
+                        <span class="fw-bold badge bg-success">{{ total_plantaciones }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-3" style="border-bottom: 2px solid var(--border-light);">
+                        <span class="text-muted">Tareas Recientes</span>
+                        <span class="fw-bold badge bg-info">{{ tareas_recientes.count }}</span>
+                    </div>
+                    <div class="fw-bold mb-2 mt-2" style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px;">
+                        ESTADO DE RIEGO
+                    </div>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-dot" style="background: #4CAF50;"></span>
+                            <span class="status-label">Óptimo: <span class="status-count">{{ riego_verde }}</span></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot" style="background: #FFC107;"></span>
+                            <span class="status-label">Atención: <span class="status-count">{{ riego_amarillo }}</span></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot" style="background: #F44336;"></span>
+                            <span class="status-label">Urgente: <span class="status-count">{{ riego_rojo }}</span></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot" style="background: #808080;"></span>
+                            <span class="status-label">Sin riego: <span class="status-count">{{ riego_gris }}</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer-custom">
+                <a href="{% url 'lista_plantaciones' %}">Ver detalles <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

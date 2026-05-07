@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Seleccionar plantación - Subir foto{% endblock %}
+
+{% block extra_css %}
+<style>
+    .subir-header {
+        background: linear-gradient(135deg, #2e7d32 0%, #558b2f 100%);
+        color: white;
+        padding: 2.5rem 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .plantacion-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .plantacion-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .plantacion-body {
+        padding: 1.25rem;
+        background: white;
+    }
+
+    .plantacion-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2e7d32;
+        margin-bottom: 0.5rem;
+    }
+
+    .plantacion-meta {
+        color: #555;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .plantacion-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 140px;
+        padding: 0.75rem 1rem;
+        background: #2e7d32;
+        color: white;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 700;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .plantacion-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(46, 125, 50, 0.2);
+    }
+
+    .sin-plantaciones {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #666;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="subir-header">
+        <h1>Selecciona una plantación</h1>
+        <p>Elige la plantación para la cual quieres subir una foto.</p>
+    </div>
+
+    {% if plantaciones %}
+        <div class="row g-4">
+            {% for plantacion in plantaciones %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="plantacion-card">
+                        <div class="plantacion-body">
+                            <div class="plantacion-title">{{ plantacion.cultivo.nombre }}</div>
+                            <div class="plantacion-meta">
+                                Parcela: {{ plantacion.parcela.nombre }}<br>
+                                Fila: {{ plantacion.fila }}, Columna: {{ plantacion.columna }}
+                            </div>
+                            <a href="{% url 'subir_foto' plantacion.id %}" class="plantacion-link">
+                                📷 Subir foto
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="sin-plantaciones">
+            <h3>No hay plantaciones disponibles</h3>
+            <p>Primero crea una plantación para poder subir fotos.</p>
+            <a href="{% url 'nueva_plantacion' %}" class="btn btn-primary mt-3">Crear plantación</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

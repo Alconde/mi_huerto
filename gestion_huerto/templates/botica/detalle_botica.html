@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  :root {
+    --verde-oscuro: #2e7d32;
+    --verde-medio: #4caf50;
+    --verde-claro: #e8f5e9;
+    --verde-fondo: #f6fbf6;
+    --gris-borde: #dde7de;
+    --gris-texto: #4b5563;
+  }
+
+  .detalle-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .detalle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  .detalle-title {
+    color: var(--verde-oscuro);
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.35rem;
+  }
+
+  .detalle-chip {
+    display: inline-block;
+    background: var(--verde-claro);
+    color: var(--verde-oscuro);
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .detalle-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 0.7fr;
+    gap: 1.25rem;
+  }
+
+  .detalle-card {
+    background: white;
+    border-radius: 1.2rem;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .detalle-card-header {
+    background: linear-gradient(135deg, #2e7d32, #4caf50);
+    color: white;
+    padding: 1rem 1.3rem;
+    font-weight: 700;
+  }
+
+  .detalle-card-body {
+    padding: 1.25rem 1.3rem;
+  }
+
+  .detalle-section + .detalle-section {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #edf1ed;
+  }
+
+  .detalle-label {
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    font-weight: 800;
+    margin-bottom: 0.35rem;
+  }
+
+  .detalle-value {
+    color: #1f2937;
+    font-size: 0.96rem;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+
+  .detalle-meta {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .estado-pill {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.78rem;
+  }
+
+  .estado-activo {
+    background: #e8f5e9;
+    color: #1b5e20;
+  }
+
+  .estado-inactivo {
+    background: #f3f4f6;
+    color: #4b5563;
+  }
+
+  .tabla-aplicaciones th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .tabla-aplicaciones td {
+    vertical-align: middle;
+    font-size: 0.92rem;
+  }
+
+  @media (max-width: 991px) {
+    .detalle-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="detalle-wrap">
+  <div class="detalle-header">
+    <div>
+      <h1 class="detalle-title">🧪 {{ remedio.nombre }}</h1>
+      <div class="detalle-chip">{{ remedio.get_tipo_display }}</div>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'crear_aplicacion_remedio' remedio.pk %}" class="btn btn-success">+ Registrar aplicación</a>
+      <a href="{% url 'editar_remedio_botica' remedio.pk %}" class="btn btn-outline-success">Editar remedio</a>
+      <a href="{% url 'lista_botica' %}" class="btn btn-outline-secondary">Volver</a>
+    </div>
+  </div>
+
+  <div class="detalle-grid">
+    <div class="detalle-card">
+      <div class="detalle-card-header">Ficha técnica</div>
+      <div class="detalle-card-body">
+
+        <div class="detalle-section">
+          <div class="detalle-label">Objetivo</div>
+          <div class="detalle-value">{{ remedio.objetivo }}</div>
+        </div>
+
+        <div class="detalle-section">
+          <div class="detalle-label">Ingredientes</div>
+          <div class="detalle-value">{{ remedio.ingredientes }}</div>
+        </div>
+
+        <div class="detalle-section">
+          <div class="detalle-label">Preparación</div>
+          <div class="detalle-value">{{ remedio.preparacion }}</div>
+        </div>
+
+        <div class="detalle-section">
+          <div class="detalle-label">Advertencias</div>
+          <div class="detalle-value">{{ remedio.advertencias|default:"Sin advertencias registradas." }}</div>
+        </div>
+
+        <div class="detalle-section">
+          <div class="detalle-label">Notas personales</div>
+          <div class="detalle-value">{{ remedio.notas|default:"Sin notas adicionales." }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detalle-card">
+      <div class="detalle-card-header">Uso práctico</div>
+      <div class="detalle-card-body">
+        <div class="detalle-meta">
+          <div>
+            <div class="detalle-label">Dosis</div>
+            <div class="detalle-value">{{ remedio.dosis|default:"No indicada" }}</div>
+          </div>
+
+          <div>
+            <div class="detalle-label">Modo de aplicación</div>
+            <div class="detalle-value">{{ remedio.get_modo_aplicacion_display }}</div>
+          </div>
+
+          <div>
+            <div class="detalle-label">Periodicidad</div>
+            <div class="detalle-value">{{ remedio.periodicidad|default:"No indicada" }}</div>
+          </div>
+
+          <div>
+            <div class="detalle-label">Momento ideal</div>
+            <div class="detalle-value">{{ remedio.momento_ideal|default:"No indicado" }}</div>
+          </div>
+
+          <div>
+            <div class="detalle-label">Estado</div>
+            <div class="detalle-value">
+              {% if remedio.activo %}
+                <span class="estado-pill estado-activo">Activo</span>
+              {% else %}
+                <span class="estado-pill estado-inactivo">Inactivo</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <div class="detalle-label">Actualizado</div>
+            <div class="detalle-value">{{ remedio.updated_at|date:"d/m/Y H:i" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detalle-card mt-4">
+    <div class="detalle-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span>Historial de aplicaciones</span>
+      <a href="{% url 'crear_aplicacion_remedio' remedio.pk %}" class="btn btn-sm btn-light">+ Registrar aplicación</a>
+    </div>
+    <div class="detalle-card-body">
+      {% if aplicaciones %}
+        <div class="table-responsive">
+          <table class="table tabla-aplicaciones align-middle">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Cultivo</th>
+                <th>Parcela</th>
+                <th>Problema</th>
+                <th>Resultado</th>
+                <th>Repetir</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for aplicacion in aplicaciones %}
+              <tr>
+                <td>{{ aplicacion.fecha_aplicacion|date:"d/m/Y" }}</td>
+                <td>{{ aplicacion.cultivo|default:"-" }}</td>
+                <td>{{ aplicacion.parcela|default:"-" }}</td>
+                <td>{{ aplicacion.problema_detectado }}</td>
+                <td>{{ aplicacion.get_resultado_display|default:"-" }}</td>
+                <td>{% if aplicacion.repetir %}Sí{% else %}No{% endif %}</td>
+                <td>
+                  <a href="{% url 'editar_aplicacion_remedio' aplicacion.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">Aún no has registrado aplicaciones para este remedio.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

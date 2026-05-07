@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ plantacion.cultivo.nombre }} - Galería | Mi Huerto{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plantacion-header {
+        background: linear-gradient(135deg, #2e7d32 0%, #558b2f 100%);
+        color: white;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .plantacion-info h1 {
+        font-size: 2.2rem;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .plantacion-detalles {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .detalle-item {
+        font-size: 0.95rem;
+    }
+    
+    .detalle-item strong {
+        display: block;
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.7);
+    }
+    
+    .btn-subir-foto {
+        background: #4CAF50;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background 0.3s;
+    }
+    
+    .btn-subir-foto:hover {
+        background: #45a049;
+    }
+    
+    .linea-tiempo {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .foto-linea-tiempo {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        align-items: start;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .foto-linea-tiempo:nth-child(even) {
+        direction: rtl;
+    }
+    
+    .foto-linea-tiempo:nth-child(even) > * {
+        direction: ltr;
+    }
+    
+    .foto-imagen-container {
+        position: relative;
+    }
+    
+    .foto-imagen-container img {
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .foto-hito-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #ffd54f;
+        color: #333;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .foto-detalles {
+        padding: 1rem 0;
+    }
+    
+    .foto-fecha-grande {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2e7d32;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .foto-dia-ciclo {
+        color: #666;
+        font-size: 1rem;
+        margin: 0 0 1rem 0;
+    }
+    
+    .foto-etiqueta-grande {
+        display: inline-block;
+        background: #f0f4c3;
+        color: #558b2f;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .foto-comentario-grande {
+        color: #555;
+        line-height: 1.6;
+        margin: 1rem 0;
+        font-style: italic;
+    }
+    
+    .foto-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-ver-completa {
+        background: #2e7d32;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background 0.3s;
+    }
+    
+    .btn-ver-completa:hover {
+        background: #1b5e20;
+    }
+    
+    .sin-fotos {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: white;
+        border-radius: 8px;
+        color: #999;
+    }
+    
+    .comparador {
+        background: white;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .comparador h3 {
+        color: #2e7d32;
+        margin-top: 0;
+    }
+    
+    .comparador-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .comparador-item img {
+        width: 100%;
+        border-radius: 8px;
+    }
+    
+    @media (max-width: 768px) {
+        .foto-linea-tiempo {
+            grid-template-columns: 1fr;
+        }
+        
+        .plantacion-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .plantacion-detalles {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- HEADER DE PLANTACIÓN -->
+    <div class="plantacion-header">
+        <div class="plantacion-info">
+            <h1>{{ plantacion.cultivo.emoji }} {{ plantacion.cultivo.nombre }}</h1>
+            <div class="plantacion-detalles">
+                <div class="detalle-item">
+                    <strong>Parcela:</strong>
+                    {{ plantacion.parcela.nombre }}
+                </div>
+                <div class="detalle-item">
+                    <strong>Plantación:</strong>
+                    {{ plantacion.fecha_plantacion|date:"d/m/Y" }}
+                </div>
+                <div class="detalle-item">
+                    <strong>Fotos:</strong>
+                    {{ plantacion.fotos.count }}
+                </div>
+                <div class="detalle-item">
+                    <strong>Día del ciclo:</strong>
+                    {{ dias_ciclo_actual }}
+                    días
+                </div>
+            </div>
+        </div>
+        <a href="{% url 'subir_foto' plantacion.id %}" class="btn-subir-foto">
+            📸 Nueva Foto
+        </a>
+    </div>
+    
+    <!-- FILTROS -->
+    {% if etiquetas %}
+        <div style="margin-bottom: 1.5rem; background: white; padding: 1rem; border-radius: 8px;">
+            <form method="GET" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <strong>Filtrar por:</strong>
+                    <select name="etiqueta" onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        {% for value, label in etiquetas %}
+                            <option value="{{ value }}" {% if etiqueta_filtro == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </form>
+        </div>
+    {% endif %}
+    
+    <!-- LÍNEA DE TIEMPO DE FOTOS -->
+    {% if fotos %}
+        <div class="linea-tiempo">
+            {% for foto in fotos %}
+                <div class="foto-linea-tiempo">
+                    <div class="foto-imagen-container">
+                        {% if foto.es_hito %}
+                            <div class="foto-hito-badge">🏆 {{ foto.tipo_hito }}</div>
+                        {% endif %}
+                        <img src="{{ foto.imagen.url }}" alt="Foto del {{ foto.fecha_foto|date:'d/m/Y' }}">
+                    </div>
+                    
+                    <div class="foto-detalles">
+                        <h3 class="foto-fecha-grande">
+                            📅 {{ foto.fecha_foto|date:"d \d\e F \d\e Y" }}
+                        </h3>
+                        <p class="foto-dia-ciclo">
+                            🌱 Día {{ foto.dia_ciclo }} del ciclo
+                        </p>
+                        
+                        <span class="foto-etiqueta-grande">{{ foto.get_etiqueta_display }}</span>
+                        
+                        {% if foto.comentario %}
+                            <p class="foto-comentario-grande">
+                                "{{ foto.comentario }}"
+                            </p>
+                        {% endif %}
+                        
+                        <div class="foto-actions">
+                            <a href="{% url 'detalle_foto' foto.id %}" class="btn-ver-completa">
+                                👁️ Ver completa
+                            </a>
+                            <a href="{% url 'editar_foto' foto.id %}" class="btn-ver-completa" style="background: #2196F3;">
+                                ✏️ Editar
+                            </a>
+                            <a href="{% url 'eliminar_foto' foto.id %}" class="btn-ver-completa" style="background: #f44336;">
+                                🗑️ Eliminar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="sin-fotos">
+            <p style="font-size: 3rem;">📸</p>
+            <p>Aún no hay fotos documentadas para esta plantación.</p>
+            <a href="{% url 'subir_foto' plantacion.id %}" class="btn-subir-foto">
+                📸 Sube la primera foto
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

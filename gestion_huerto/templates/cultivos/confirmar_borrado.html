@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="alert alert-danger col-md-6 mx-auto mt-5 text-center">
+    <h4>¿Eliminar {{ cultivo.nombre }}?</h4>
+    <p>Esta acción no se puede deshacer y podría afectar al histórico de plantaciones.</p>
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sí, eliminar definitivamente</button>
+        <a href="{% url 'lista_cultivos' %}" class="btn btn-light">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,605 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .rotacion-header {
+        background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .rotacion-header h2 {
+        margin: 0;
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    .rotacion-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .stat-box {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .seccion {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    
+    .seccion h3 {
+        color: #2e7d32;
+        border-bottom: 3px solid #2e7d32;
+        padding-bottom: 12px;
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+    }
+    
+    .diagrama-asociaciones {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .cultivo-card {
+        background: #f9f9f9;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        border-left: 4px solid #2e7d32;
+    }
+    
+    .cultivo-card h5 {
+        margin: 10px 0 5px 0;
+        color: #333;
+    }
+    
+    .cultivo-emoji {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    
+    .asociaciones-tabla {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    
+    .asociaciones-tabla th {
+        background: #2e7d32;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .asociaciones-tabla tr:hover {
+        background: #f0f0f0;
+    }
+    
+    .asociaciones-tabla td {
+        padding: 12px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .badge-buena {
+        background: #28a745;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .badge-mala {
+        background: #dc3545;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .historial-item {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border-left: 4px solid #2e7d32;
+    }
+    
+    .historial-item h5 {
+        margin: 0 0 10px 0;
+        color: #333;
+    }
+    
+    .historial-dates {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 8px;
+    }
+    
+    .recomendacion-box {
+        background: #e8f5e9;
+        border: 2px solid #2e7d32;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .recomendacion-parcela {
+        font-weight: 600;
+        color: #2e7d32;
+        margin-bottom: 10px;
+    }
+
+    .ciclo-rotacion {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .caja-ciclo {
+        background: #f1f8e9;
+        border: 1px solid #c5e1a5;
+        border-radius: 12px;
+        padding: 16px 18px;
+        flex: 1 1 180px;
+        min-width: 160px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .caja-ciclo small {
+        display: block;
+        margin-top: 6px;
+        color: #555;
+        font-size: 0.9rem;
+    }
+
+    .flecha-ciclo {
+        font-size: 2rem;
+        color: #2e7d32;
+        margin: 0 8px;
+    }
+    
+    .cultivos-recomendados {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .cultivo-recomendado {
+        background: white;
+        border: 1px solid #2e7d32;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        color: #2e7d32;
+        font-weight: 500;
+    }
+    
+    .tabla-rotaciones {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .tabla-rotaciones th {
+        background: #2e7d32;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .tabla-rotaciones tr:hover {
+        background: #f0f0f0;
+    }
+    
+    .tabla-rotaciones td {
+        padding: 12px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .timeline-rotacion {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline-rotacion::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #2e7d32;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: #f9f9f9;
+        border-radius: 6px;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -35px;
+        top: 20px;
+        width: 12px;
+        height: 12px;
+        background: #2e7d32;
+        border-radius: 50%;
+        border: 3px solid white;
+    }
+    
+    .clasificacion-grupo {
+        background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f6 100%);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border-left: 4px solid #2e7d32;
+    }
+    
+    .clasificacion-titulo {
+        font-weight: 600;
+        color: #2e7d32;
+        margin-bottom: 8px;
+    }
+    
+    .clasificacion-cultivos {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .clasificacion-cultivo {
+        background: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        border: 1px solid #2e7d32;
+    }
+    
+    .btn-crear {
+        background: #2e7d32;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        margin-top: 15px;
+    }
+    
+    .btn-crear:hover {
+        background: #1b5e20;
+        transform: translateY(-2px);
+    }
+    
+    .alerta-vacío {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        padding: 15px;
+        border-radius: 6px;
+        color: #856404;
+        margin-top: 15px;
+    }
+    
+    .grupo-rotacion {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+</style>
+
+<!-- ENCABEZADO -->
+<div class="rotacion-header">
+    <h2>🔄 Rotaciones y Asociaciones de Cultivos</h2>
+    <p>Sistema de gestión para optimizar las rotaciones en tu huerto</p>
+    
+    <div class="rotacion-stats">
+        <div class="stat-box">
+            <div class="stat-number">{{ total_cultivos }}</div>
+            <div class="stat-label">Cultivos</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ total_asociaciones }}</div>
+            <div class="stat-label">Asociaciones</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ historial|length }}</div>
+            <div class="stat-label">Registros Históricos</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ recomendaciones_por_parcela|length }}</div>
+            <div class="stat-label">Parcelas</div>
+        </div>
+    </div>
+</div>
+
+<div class="seccion">
+    <h3>🔁 Ciclo recomendado de rotación</h3>
+    <div class="ciclo-rotacion">
+        <div class="caja-ciclo">
+            <strong>Leguminosas</strong><br>
+            <small>Nitrifican el suelo</small>
+        </div>
+        <div class="flecha-ciclo">→</div>
+        <div class="caja-ciclo">
+            <strong>Crucíferas / Hojas</strong><br>
+            <small>Consumen nitrógeno</small>
+        </div>
+        <div class="flecha-ciclo">→</div>
+        <div class="caja-ciclo">
+            <strong>Solanáceas</strong><br>
+            <small>Exigentes en potasio/fósforo</small>
+        </div>
+        <div class="flecha-ciclo">→</div>
+        <div class="caja-ciclo">
+            <strong>Aliáceas</strong><br>
+            <small>Limpian y aprovechan lo que queda</small>
+        </div>
+    </div>
+</div>
+
+<!-- SECCIÓN 1: DIAGRAMA Y ASOCIACIONES DE CULTIVOS -->
+<div class="seccion">
+    <h3>🌾 Asociaciones y Clasificaciones de Cultivos</h3>
+    
+    <!-- DIAGRAMA VISUAL DE GRUPOS -->
+    <div class="grupo-rotacion">
+        {% for rec in recomendaciones %}
+        <div class="clasificacion-grupo">
+            <div class="clasificacion-titulo">{{ rec.get_grupo_display }}</div>
+            <div class="clasificacion-cultivos">
+                {% for cult in rec.cultivos_asociados.all %}
+                <div class="clasificacion-cultivo">{{ cult.nombre }}</div>
+                {% endfor %}
+            </div>
+            {% if rec.descripcion %}
+            <small style="color: #666; display: block; margin-top: 8px;">{{ rec.descripcion }}</small>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="alerta-vacío">
+            ℹ️ No hay clasificaciones de rotación configuradas aún.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- SECCIÓN 2: TABLA DE ASOCIACIONES FAVORABLES -->
+<div class="seccion">
+    <h3>✅ Buenas Asociaciones de Cultivos</h3>
+    
+    {% if asociaciones_buenas %}
+    <table class="asociaciones-tabla">
+        <thead>
+            <tr>
+                <th>Cultivo Principal</th>
+                <th>Asociado con</th>
+                <th>Beneficios</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asoc in asociaciones_buenas %}
+            <tr>
+                <td>
+                    <strong>{{ asoc.cultivo_principal.nombre }}</strong>
+                    <br><small>{{ asoc.cultivo_principal.emoji }}</small>
+                </td>
+                <td>
+                    <strong>{{ asoc.cultivo_asociado.nombre }}</strong>
+                    <br><small>{{ asoc.cultivo_asociado.emoji }}</small>
+                </td>
+                <td>
+                    {% if asoc.descripcion %}
+                        {{ asoc.descripcion }}
+                    {% else %}
+                        <span class="badge-buena">Buena Asociación</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alerta-vacío">
+        ℹ️ No hay asociaciones favorables registradas aún.
+    </div>
+    {% endif %}
+</div>
+
+<!-- SECCIÓN 3: TABLA DE ASOCIACIONES A EVITAR -->
+<div class="seccion">
+    <h3>❌ Asociaciones a Evitar</h3>
+    
+    {% if asociaciones_malas %}
+    <table class="asociaciones-tabla">
+        <thead>
+            <tr>
+                <th>Cultivo Principal</th>
+                <th>Evitar con</th>
+                <th>Razón</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asoc in asociaciones_malas %}
+            <tr>
+                <td>
+                    <strong>{{ asoc.cultivo_principal.nombre }}</strong>
+                    <br><small>{{ asoc.cultivo_principal.emoji }}</small>
+                </td>
+                <td>
+                    <strong>{{ asoc.cultivo_asociado.nombre }}</strong>
+                    <br><small>{{ asoc.cultivo_asociado.emoji }}</small>
+                </td>
+                <td>
+                    {% if asoc.descripcion %}
+                        {{ asoc.descripcion }}
+                    {% else %}
+                        <span class="badge-mala">Mala Asociación</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alerta-vacío">
+        ℹ️ No hay asociaciones desfavorables registradas aún.
+    </div>
+    {% endif %}
+</div>
+
+<!-- SECCIÓN 4: RECOMENDACIONES DE ROTACIÓN POR PARCELA -->
+<div class="seccion">
+    <h3>📋 Recomendaciones de Rotación por Parcela</h3>
+    
+    {% if recomendaciones_por_parcela %}
+    <div class="grupo-rotacion">
+        {% for rec in recomendaciones_por_parcela %}
+        <div class="recomendacion-box">
+            <div class="recomendacion-parcela">📍 {{ rec.parcela.nombre }}</div>
+            
+            <div style="margin-bottom: 12px;">
+                <strong>Último cultivo:</strong> {{ rec.ultimo_cultivo }}<br>
+                <small style="color: #666;">hasta {{ rec.fecha_ultimo|date:"d/m/Y" }}</small>
+            </div>
+            
+            <div>
+                <strong>🌱 Se recomienda plantar:</strong><br>
+                <div class="cultivos-recomendados">
+                    {% for cultivo in rec.cultivos_recomendados %}
+                    <div class="cultivo-recomendado">
+                        {{ cultivo.emoji }} {{ cultivo.nombre }}
+                    </div>
+                    {% empty %}
+                    <small style="color: #666;">No hay recomendaciones disponibles</small>
+                    {% endfor %}
+                </div>
+                {% if rec.recomendacion_texto %}
+                <div style="margin-top: 14px; padding: 12px; background: #fff9c4; border-left: 4px solid #fbc02d; border-radius: 8px; color: #6b4f00;">
+                    <strong>💡 Recomendación:</strong> {{ rec.recomendacion_texto }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alerta-vacío">
+        ℹ️ No hay historial de rotaciones. Comienza a registrar plantaciones.
+    </div>
+    {% endif %}
+</div>
+
+<!-- SECCIÓN 5: HISTORIAL DE ROTACIONES -->
+<div class="seccion">
+    <h3>📊 Historial de Rotaciones</h3>
+    
+    {% if historial %}
+    <table class="tabla-rotaciones">
+        <thead>
+            <tr>
+                <th>Parcela</th>
+                <th>Cultivo</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin</th>
+                <th>Plantas</th>
+                <th>Duración</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in historial %}
+            <tr>
+                <td><strong>{{ registro.parcela.nombre }}</strong></td>
+                <td>
+                    <span>{{ registro.cultivo.emoji }}</span>
+                    {{ registro.cultivo.nombre }}
+                </td>
+                <td>{{ registro.fecha_inicio|date:"d/m/Y" }}</td>
+                <td>{{ registro.fecha_fin|date:"d/m/Y" }}</td>
+                <td>{{ registro.plantaciones }}</td>
+                <td>{{ registro.duracion_dias }} días</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alerta-vacío">
+        ℹ️ No hay registros de rotación aún. Los registros se generarán automáticamente con las plantaciones.
+    </div>
+    {% endif %}
+</div>
+
+<!-- SECCIÓN 6: CLASIFICACIÓN POR PÁRRAFO-GRUPOS -->
+<div class="seccion">
+    <h3>📚 Clasificación de Cultivos por Grupo</h3>
+    
+    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; line-height: 1.8;">
+        <p>
+            <strong>🟨 Solanáceas:</strong> Tomate, Pimiento, Berenjena<br>
+            <em>Necesitan mucho abono y pueden dejar la tierra agotada. Dejan buenos nutrientes para leguminosas después.</em>
+        </p>
+        
+        <p>
+            <strong>🟩 Leguminosas:</strong> Judía, Guisante, Habichuela<br>
+            <em>Fijan nitrógeno en el suelo. Son óptimas después de solanáceas y antes de crucíferas.</em>
+        </p>
+        
+        <p>
+            <strong>🟦 Crucíferas:</strong> Repollo, Brócoli, Coliflor<br>
+            <em>Demandan mucho nitrógeno. Mejor después de leguminosas. Evita plantarlas años seguidos.</em>
+        </p>
+        
+        <p>
+            <strong>🟪 Cucurbitáceas:</strong> Calabaza, Pepino, Melón<br>
+            <em>Rastrojeras y exigentes. Requieren riego abundante y suelos bien labrados.</em>
+        </p>
+        
+        <p>
+            <strong>🟧 Allium:</strong> Cebolla, Ajo, Puerro<br>
+            <em>Buen cultivo de limpieza. Ayuda a eliminar plagas de cultivos anteriores.</em>
+        </p>
+    </div>
+</div>
+
+<script>
+    // Puedes agregar interactividad aquí si es necesario
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ejemplo: animaciones al cargar
+        console.log('Página de rotaciones cargada');
+    });
+</script>
+{% endblock %}

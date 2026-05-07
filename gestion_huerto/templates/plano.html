@@ -1,0 +1,512 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+    <!-- LADO IZQUIERDO: PLANOS DE LAS TABLAS -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Mapa de Cultivos Ecológicos 🗺️</h2>
+            
+            <div class="d-flex align-items-center gap-3">
+                <!-- Selector de Año (Para Rotaciones) -->
+                <form method="GET" class="d-flex align-items-center bg-white p-2 rounded shadow-sm border">
+                    <label class="me-2 small fw-bold text-muted text-uppercase" style="font-size: 0.7rem;">Año del Cuaderno:</label>
+                    <select name="anio" onchange="this.form.submit()" class="form-select form-select-sm" style="width: auto;">
+                        {% for a in lista_anios %}
+                        <option value="{{ a }}" {% if anio_consulta == a %}selected{% endif %}>{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                
+                <!-- Botón de Filtro de Riego -->
+                <button id="btnFiltroRiego" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-2">
+                    <span id="iconoFiltro">🔍</span>
+                    <span id="textoFiltro">¿Qué necesita riego?</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Alertas de Cosecha Próxima -->
+        {% if alertas_cosecha %}
+        <div class="alert alert-warning shadow-sm border-start border-5 border-warning d-flex align-items-center mb-4">
+            <span class="fs-4 me-3">🧺</span>
+            <div>
+                <strong class="d-block">Cosechas previstas (Próximos 7 días):</strong>
+                {% for p in alertas_cosecha %}
+                    <span class="badge bg-white text-dark border me-1">{{ p.cultivo.emoji }} {{ p.cultivo.nombre }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% for p_data in parcelas_data %}
+        <div class="card mb-5 shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-dark text-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ p_data.info.nombre }}</h5>
+                    <div class="small opacity-75">
+                        <span class="me-3">⬆ Norte</span>
+                        <span>⬇ Sur</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Foto General de la Parcela -->
+            {% if p_data.info.foto_general %}
+            <div class="card-body bg-light p-3 border-bottom">
+                <div class="text-center">
+                    <img src="{{ p_data.info.foto_general.url }}" 
+                         alt="Foto general de {{ p_data.info.nombre }}" 
+                         class="img-fluid rounded shadow-sm" 
+                         style="max-height: 200px; cursor: pointer;"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#fotoModal{{ p_data.info.id }}">
+                    <p class="small text-muted mt-2">📸 Foto general de la parcela</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card-body bg-light overflow-auto py-4">
+                
+                <!-- Malla del Huerto -->
+                <table class="mx-auto" style="border-collapse: separate; border-spacing: 4px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th> <!-- Espina lateral -->
+                            {% for letra in p_data.cabecera_cols %}
+                            <th class="text-center text-muted fw-normal small" style="width: 35px; height: 30px;">
+                                {{ letra }}
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fila_lista in p_data.grid %}
+                        <tr>
+                            <!-- Número de Fila (1, 2, 3...) -->
+                            <td class="text-muted small pe-3 text-end fw-bold" style="vertical-align: middle;">
+                                {{ forloop.counter }}
+                            </td>
+                            
+                            {% for celda in fila_lista %}
+                                {% if celda.existe %}
+                                    {% if celda.plantas %}
+                                        <!-- Celda Ocupada -->
+                                        <td class="celda-tierra celda-ocupada {% if celda.plantas.0.color_riego == '#ffff00' or celda.plantas.0.color_riego == '#ff0000' %}celda-necesita-riego{% endif %}" 
+                                            style="width: 38px; height: 38px; border-radius: 6px; text-align: center; vertical-align: middle; position: relative; 
+                                                   background-color: {{ celda.plantas.0.cultivo.familia_color }} !important; border: 1px solid rgba(0,0,0,0.1);"
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-placement="top"
+                                            data-color-riego="{{ celda.plantas.0.color_riego }}"
+                                            data-plantaciones="{% for p in celda.plantas %}{{ p.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                            data-plant-names="{% for p in celda.plantas %}{{ p.cultivo.nombre }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                            title="{% for p in celda.plantas %}{{ p.cultivo.nombre|upper }} &#10;Finca: {{ p.fecha_trasplante|date:'d/m/Y' }} &#10;Cosecha: {{ p.fecha_cosecha_estimada|date:'d/m/Y' }} &#10;--- TAREAS --- &#10;{% for t in p.tareas.all %}• {{ t.get_tipo_display }} ({{ t.fecha|date:'d/m' }}) &#10;{% empty %}Sin tareas recientes &#10;{% endfor %}{% if not forloop.last %}---------- &#10;{% endif %}{% endfor %}">
+                                            
+                                            <!-- Indicador de Riego (Gota) -->
+                                            {% if celda.plantas.0.color_riego == '#0000ff' %}
+                                                <span style="position: absolute; top: 2px; right: 2px; font-size: 0.8rem; z-index: 5;">💧</span>
+                                            {% elif celda.plantas.0.color_riego == '#ffff00' %}
+                                                <span style="position: absolute; top: 2px; right: 2px; font-size: 0.8rem; z-index: 5;">⚠️</span>
+                                            {% elif celda.plantas.0.color_riego == '#ff0000' %}
+                                                <span style="position: absolute; top: 2px; right: 2px; font-size: 0.8rem; z-index: 5;">🔥</span>
+                                            {% endif %}
+
+                                            <div class="d-flex justify-content-center align-items-center h-100 w-100">
+                                                {% for p in celda.plantas %}
+                                                    <span class="emoji-plantado" style="font-size: 1.2rem; {% if celda.plantas|length > 1 %}margin: -4px; scale: 0.8;{% endif %}">
+                                                        {{ p.cultivo.emoji }}
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        </td>
+                                    {% else %}
+                                        <!-- Celda Vacía y Clicable -->
+                                        <td class="celda-tierra celda-vacia" 
+                                            style="width: 38px; height: 38px; border-radius: 6px; text-align: center; vertical-align: middle; position: relative; 
+                                                   background-color: #a1887f; border: 2px solid rgba(255,255,255,0.3); cursor: pointer;"
+                                            data-fila="{{ forloop.parentloop.counter }}"
+                                            data-columna="{{ forloop.counter0 }}"
+                                            data-url="{% url 'nueva_plantacion_mapa' parcela_id=p_data.info.id fila=forloop.parentloop.counter columna=forloop.counter0 %}"
+                                            data-tarea-url="{% url 'nueva_tarea' %}?zona=Parcela+{{ p_data.info.nombre|urlencode }}+F{{ forloop.parentloop.counter }}+C{{ forloop.counter0 }}"
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-placement="top"
+                                            title="Haz clic para plantar aquí. Shift+Clic para crear tarea en esta zona">                                            
+                                            <div class="d-flex justify-content-center align-items-center h-100 w-100 celda-icono">
+                                                <span style="font-size: 1.3rem; opacity: 0; display: none;">➕</span>
+                                            </div>
+                                        </td>
+                                    {% endif %}
+                                {% else %}
+                                    <td style="width: 38px; height: 38px;"></td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- LADO DERECHO: LEYENDA E INDICADORES -->
+    <div class="col-md-3">
+        <div class="card sticky-top shadow-sm border-0 rounded-4" style="top: 20px;">
+            <div class="card-header bg-success text-white py-3">
+                <h6 class="mb-0 text-center">📊 Guía de Gestión</h6>
+            </div>
+            <div class="card-body">
+                <p class="small fw-bold text-muted text-uppercase mb-3" style="font-size: 0.65rem;">Familias Botánicas</p>
+                <ul class="list-unstyled mb-4">
+                    <li class="d-flex align-items-center mb-2">
+                        <div style="width: 18px; height: 18px; background: #a1887f; border: 1px solid #8d6e63; border-radius: 4px;" class="me-2"></div>
+                        <span class="small">Tierra vacía</span>
+                    </li>
+                    {% for familia in leyenda %}
+                    <li class="d-flex align-items-center mb-2">
+                        <!-- Forzamos el color de la familia aquí con !important -->
+                        <div style="width: 18px; height: 18px; background-color: {{ familia.color }} !important; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;" class="me-2 shadow-sm"></div>
+                        <span class="small">{{ familia.label }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <p class="small fw-bold text-muted text-uppercase mb-3" style="font-size: 0.65rem;">Estado de Riego</p>
+                <div class="mb-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2">💧</span>
+                        <span class="small">Óptimo (&lt; 6 días)</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2">⚠️</span>
+                        <span class="small">Atención (7-10 días)</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2">🔥</span>
+                        <span class="small">Urgente (&gt;10 días, Seco)</span>
+                    </div>
+                </div>
+
+                <div class="bg-light p-3 rounded-3 border mb-3">
+                    <p class="small mb-0 text-muted">
+                        <strong>Tip:</strong> El plano muestra cultivos vivos. Si plantaste en 2025 y cosechas en 2026, lo verás en ambos años.
+                    </p>
+                </div>
+                <div class="bg-light p-3 rounded-3 border">
+                    <p class="small mb-0 text-muted">
+                        <strong>Acción rápida:</strong> Shift+Clic sobre una celda vacía para crear una tarea vinculada a esa zona.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para fotos de parcelas -->
+{% for p_data in parcelas_data %}
+{% if p_data.info.foto_general %}
+<div class="modal fade" id="fotoModal{{ p_data.info.id }}" tabindex="-1" aria-labelledby="fotoModalLabel{{ p_data.info.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fotoModalLabel{{ p_data.info.id }}">Foto general de {{ p_data.info.nombre }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="{{ p_data.info.foto_general.url }}" alt="Foto general de {{ p_data.info.nombre }}" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<!-- Modal para Registro Rápido de Riego -->
+<div class="modal fade" id="modalRiegoRapido" tabindex="-1" aria-labelledby="modalRiegoRapidoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalRiegoRapidoLabel">💧 Registrar Riego Hoy</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">Selecciona las plantaciones que has regado hoy:</p>
+                <form id="formRiegoRapido">
+                    {% csrf_token %}
+                    <div id="listaPlantacionesRiego">
+                        <!-- Las plantaciones se cargarán aquí dinámicamente -->
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-droplet-fill"></i> Registrar Riego
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Efecto de elevación de las celdas */
+    .celda-tierra { 
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    }
+
+    /* Estilos para celdas ocupadas */
+    .celda-ocupada {
+        cursor: help;
+    }
+    
+    .celda-ocupada:hover { 
+        transform: scale(1.4); 
+        z-index: 1000 !important; 
+        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        border: 2px solid white !important;
+    }
+
+    /* Estilos para celdas vacías clicables */
+    .celda-vacia {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .celda-vacia::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+        transition: left 0.3s ease;
+    }
+
+    .celda-vacia:hover {
+        background-color: #8fb48f !important;
+        border-color: rgba(255,255,255,0.6) !important;
+        box-shadow: 0 0 12px rgba(0,0,0,0.2), inset 0 0 8px rgba(255,255,255,0.2);
+        transform: scale(1.15);
+        z-index: 100;
+    }
+
+    .celda-vacia:hover::before {
+        left: 100%;
+    }
+
+    .celda-vacia:hover .celda-icono span {
+        display: inline-block !important;
+        opacity: 1 !important;
+        animation: pulse-plantacion 0.6s ease-in-out;
+    }
+
+    @keyframes pulse-plantacion {
+        0% {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    /* Formato del Tooltip */
+    .tooltip-inner {
+        text-align: left !important;
+        padding: 12px;
+        white-space: pre-wrap;
+        font-size: 0.85rem;
+        border-radius: 10px;
+        background-color: rgba(0, 0, 0, 0.9);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .emoji-plantado {
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+    }
+
+    /* Efecto de clic visual */
+    .celda-vacia:active {
+        transform: scale(0.95);
+    }
+    /* Clase para dar forma de trapecio a la T3 */
+    .forma-trapecio {
+        /* Esto crea la cuña: empieza en 20% arriba (Oeste corto) y abre al 100% (Este largo) */
+        clip-path: polygon(0% 25%, 100% 0%, 100% 100%, 0% 75%);
+        transition: all 0.5s ease;
+        padding: 40px 20px !important; /* Más aire para que no se corten los bordes */
+    }
+
+    /* Mejora de la textura de la tierra vacía */
+    .celda-vacia {
+        background-image: radial-gradient(#8d6e63 10%, transparent 20%),
+                        radial-gradient(#8d6e63 10%, transparent 20%);
+        background-position: 0 0, 5px 5px;
+        background-size: 10px 10px;
+        background-color: #a1887f !important;
+    }
+
+    /* Filtro de riego: celdas opacas */
+    .filtro-riego-activo .celda-tierra:not(.celda-necesita-riego) {
+        opacity: 0.3 !important;
+        filter: grayscale(50%) blur(0.5px);
+        transition: all 0.3s ease;
+    }
+
+    /* Celdas que necesitan riego (amarillo/rojo) */
+    .celda-necesita-riego {
+        opacity: 1 !important;
+        filter: none !important;
+        animation: destacar-riego 0.5s ease-in-out;
+    }
+
+    @keyframes destacar-riego {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+</style>
+
+<script>
+    // Inicialización de Tooltips de Bootstrap
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                html: false, // Usamos texto plano con &#10; para saltos de línea
+                trigger: 'hover'
+            })
+        })
+
+        // Hacer celdas vacías clicables
+        document.querySelectorAll('.celda-vacia').forEach(function(celda) {
+            celda.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tareaUrl = this.getAttribute('data-tarea-url');
+                const url = this.getAttribute('data-url');
+                if (e.shiftKey && tareaUrl) {
+                    window.location.href = tareaUrl;
+                    return;
+                }
+                window.location.href = url;
+            });
+
+            // Efecto visual al pasar el mouse
+            celda.addEventListener('mouseenter', function() {
+                this.style.cursor = 'pointer';
+            });
+
+            // Permitir navegación con Enter cuando está enfocada
+            celda.setAttribute('tabindex', '0');
+            celda.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const url = this.getAttribute('data-url');
+                    window.location.href = url;
+                }
+            });
+        });
+    });
+
+    // Handler for irrigation quick access
+    document.querySelectorAll('.celda-ocupada').forEach(function(celda) {
+        celda.addEventListener('click', function(e) {
+            if (this.getAttribute('data-color-riego') === '#ff0000') {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const plantIds = this.getAttribute('data-plantaciones').split(',');
+                const plantNames = this.getAttribute('data-plant-names').split(',');
+                
+                // Populate modal
+                const listaDiv = document.getElementById('listaPlantacionesRiego');
+                listaDiv.innerHTML = '';
+                
+                plantIds.forEach((id, index) => {
+                    const name = plantNames[index];
+                    const div = document.createElement('div');
+                    div.className = 'form-check';
+                    div.innerHTML = `
+                        <input class="form-check-input" type="checkbox" value="${id}" id="plant${id}" checked>
+                        <label class="form-check-label" for="plant${id}">
+                            ${name}
+                        </label>
+                    `;
+                    listaDiv.appendChild(div);
+                });
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('modalRiegoRapido'));
+                modal.show();
+            }
+        });
+    });
+
+    // Handle form submission
+    document.getElementById('formRiegoRapido').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const selectedPlants = Array.from(document.querySelectorAll('#listaPlantacionesRiego input:checked')).map(cb => cb.value);
+        
+        if (selectedPlants.length === 0) {
+            alert('Selecciona al menos una plantación para registrar el riego.');
+            return;
+        }
+        
+        // AJAX call to register irrigation
+        fetch('/registrar_riego_rapido/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                plantaciones: selectedPlants
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Riego registrado exitosamente.');
+                location.reload(); // Reload to update colors
+            } else {
+                alert('Error al registrar el riego: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al registrar el riego.');
+        });
+    });
+
+    // Filtro de riego
+    let filtroRiegoActivo = false;
+    const btnFiltroRiego = document.getElementById('btnFiltroRiego');
+    const iconoFiltro = document.getElementById('iconoFiltro');
+    const textoFiltro = document.getElementById('textoFiltro');
+    
+    btnFiltroRiego.addEventListener('click', function() {
+        filtroRiegoActivo = !filtroRiegoActivo;
+        const body = document.body;
+        
+        if (filtroRiegoActivo) {
+            body.classList.add('filtro-riego-activo');
+            iconoFiltro.textContent = '🚿';
+            textoFiltro.textContent = 'Mostrar todo';
+            btnFiltroRiego.classList.remove('btn-outline-primary');
+            btnFiltroRiego.classList.add('btn-primary');
+        } else {
+            body.classList.remove('filtro-riego-activo');
+            iconoFiltro.textContent = '🔍';
+            textoFiltro.textContent = '¿Qué necesita riego?';
+            btnFiltroRiego.classList.remove('btn-primary');
+            btnFiltroRiego.classList.add('btn-outline-primary');
+        }
+    });
+</script>
+{% endblock %}

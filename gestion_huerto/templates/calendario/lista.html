@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .calendario-header {
+        background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .calendario-header h2 {
+        margin: 0;
+        font-size: 2rem;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .calendario-header p {
+        margin: 0;
+        opacity: 0.95;
+    }
+    
+    .filtros-container {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    
+    .filtro-seccion {
+        margin-bottom: 20px;
+    }
+    
+    .filtro-seccion:last-child {
+        margin-bottom: 0;
+    }
+    
+    .filtro-titulo {
+        background: #2e7d32;
+        color: white;
+        padding: 12px 15px;
+        border-radius: 6px;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    
+    .filtro-opciones {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        padding: 0 15px;
+    }
+    
+    .filtro-opcion {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .filtro-opcion input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .filtro-opcion label {
+        cursor: pointer;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .acciones-container {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .btn-filtrar {
+        background: #2e7d32;
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-filtrar:hover {
+        background: #1b5e20;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-limpiar {
+        background: #e0e0e0;
+        color: #333;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-limpiar:hover {
+        background: #d0d0d0;
+    }
+    
+    .calendario-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .mes-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s;
+    }
+    
+    .mes-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+    
+    .mes-header {
+        background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+        color: white;
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .mes-numero {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .mes-nombre {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .mes-emoji {
+        font-size: 2rem;
+        margin-top: 5px;
+    }
+    
+    .mes-body {
+        padding: 15px;
+    }
+    
+    .actividad-grupo {
+        margin-bottom: 15px;
+    }
+    
+    .actividad-grupo:last-child {
+        margin-bottom: 0;
+    }
+    
+    .actividad-titulo {
+        font-weight: 600;
+        padding: 8px 10px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .actividad-siembra {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-left: 3px solid #2e7d32;
+    }
+    
+    .actividad-trasplante {
+        background: #e3f2fd;
+        color: #1565c0;
+        border-left: 3px solid #1565c0;
+    }
+    
+    .actividad-cosecha {
+        background: #fff3e0;
+        color: #e65100;
+        border-left: 3px solid #e65100;
+    }
+    
+    .cultivos-lista {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .cultivos-lista li {
+        padding: 6px 10px;
+        background: white;
+        border-radius: 4px;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        border-left: 2px solid transparent;
+    }
+    
+    .cultivos-lista li:last-child {
+        margin-bottom: 0;
+    }
+    
+    .actividad-siembra .cultivos-lista li {
+        border-left-color: #2e7d32;
+    }
+    
+    .actividad-trasplante .cultivos-lista li {
+        border-left-color: #1565c0;
+    }
+    
+    .actividad-cosecha .cultivos-lista li {
+        border-left-color: #e65100;
+    }
+    
+    .cultivo-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .cultivo-emoji {
+        font-size: 1.1rem;
+    }
+    
+    .sin-datos {
+        color: #999;
+        font-style: italic;
+        padding: 10px;
+        text-align: center;
+    }
+    
+    .alerta-vacia {
+        background: #b3e5fc;
+        border: 1px solid #01579b;
+        padding: 15px;
+        border-radius: 6px;
+        color: #01579b;
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .resumen-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        text-align: center;
+    }
+    
+    .stat-numero {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #2e7d32;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    @media (max-width: 768px) {
+        .calendario-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .filtro-opciones {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<!-- ENCABEZADO -->
+<div class="calendario-header">
+    <h2>📅 Calendario del Huerto</h2>
+    <p>Gestiona tus plantaciones, trasplantes y cosechas según el calendario anual</p>
+</div>
+
+<!-- FILTROS -->
+<form method="get" class="filtros-container" id="filtro-form">
+    <!-- FILTRO DE MESES -->
+    <div class="filtro-seccion">
+        <div class="filtro-titulo">Selecciona meses:</div>
+        <div class="filtro-opciones">
+            {% for mes_info in meses_info %}
+            <div class="filtro-opcion">
+                <input type="checkbox" 
+                       id="mes-{{ mes_info.num }}" 
+                       name="mes" 
+                       value="{{ mes_info.num }}"
+                       {% if mes_info.num in meses_filtrados %}checked{% endif %}>
+                <label for="mes-{{ mes_info.num }}">
+                    {{ mes_info.emoji }} {{ mes_info.nombre }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- FILTRO DE ACCIONES -->
+    <div class="filtro-seccion">
+        <div class="filtro-titulo">Acción:</div>
+        <div class="filtro-opciones">
+            <div class="filtro-opcion">
+                <input type="checkbox" 
+                       id="accion-siembra" 
+                       name="accion" 
+                       value="siembra"
+                       {% if 'siembra' in acciones_filtradas %}checked{% endif %}>
+                <label for="accion-siembra">🌱 Siembra</label>
+            </div>
+            <div class="filtro-opcion">
+                <input type="checkbox" 
+                       id="accion-trasplante" 
+                       name="accion" 
+                       value="trasplante"
+                       {% if 'trasplante' in acciones_filtradas %}checked{% endif %}>
+                <label for="accion-trasplante">🌿 Trasplante</label>
+            </div>
+            <div class="filtro-opcion">
+                <input type="checkbox" 
+                       id="accion-cosecha" 
+                       name="accion" 
+                       value="cosecha"
+                       {% if 'cosecha' in acciones_filtradas %}checked{% endif %}>
+                <label for="accion-cosecha">🥕 Cosecha</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BOTONES -->
+    <div class="acciones-container">
+        <button type="submit" class="btn-filtrar">🔍 Filtrar</button>
+        <a href="{% url 'calendario' %}" class="btn-limpiar">✕ Limpiar Filtros</a>
+    </div>
+</form>
+
+<!-- ESTADÍSTICAS RÁPIDAS -->
+<div class="resumen-stats">
+    <div class="stat-card">
+        <div class="stat-numero">{{ calendario|length }}</div>
+        <div class="stat-label">Meses Visibles</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-numero">{{ cultivos_totales }}</div>
+        <div class="stat-label">Cultivos Registrados</div>
+    </div>
+</div>
+
+<!-- CALENDARIO GRID -->
+{% if calendario %}
+<div class="calendario-grid">
+    {% for mes_num, mes_datos in calendario.items %}
+    <div class="mes-card">
+        <!-- ENCABEZADO DEL MES -->
+        <div class="mes-header">
+            <div class="mes-numero">{{ mes_num }}</div>
+            <div class="mes-nombre">{{ mes_datos.info.nombre }}</div>
+            <div class="mes-emoji">{{ mes_datos.info.emoji }}</div>
+        </div>
+        
+        <!-- CUERPO DEL MES -->
+        <div class="mes-body">
+            {% if mes_datos.alertas %}
+            <div style="background: #fff4e5; color: #8b5d10; border: 1px solid #f5c26b; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                <strong>❄️ Riesgo de heladas:</strong> {{ mes_datos.alertas.0 }}
+            </div>
+            {% endif %}
+
+            <!-- SIEMBRA -->
+            {% if mes_datos.siembra %}
+            <div class="actividad-grupo">
+                <div class="actividad-titulo actividad-siembra">
+                    🌱 Siembra
+                </div>
+                <ul class="cultivos-lista">
+                    {% for cultivo in mes_datos.siembra %}
+                    <li>
+                        <div class="cultivo-item">
+                            <span class="cultivo-emoji">{{ cultivo.emoji }}</span>
+                            <span>{{ cultivo.nombre }}</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- TRASPLANTE -->
+            {% if mes_datos.trasplante %}
+            <div class="actividad-grupo">
+                <div class="actividad-titulo actividad-trasplante">
+                    🌿 Trasplante
+                </div>
+                <ul class="cultivos-lista">
+                    {% for cultivo in mes_datos.trasplante %}
+                    <li>
+                        <div class="cultivo-item">
+                            <span class="cultivo-emoji">{{ cultivo.emoji }}</span>
+                            <span>{{ cultivo.nombre }}</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- COSECHA -->
+            {% if mes_datos.cosecha %}
+            <div class="actividad-grupo">
+                <div class="actividad-titulo actividad-cosecha">
+                    🥕 Cosecha
+                </div>
+                <ul class="cultivos-lista">
+                    {% for cultivo in mes_datos.cosecha %}
+                    <li>
+                        <div class="cultivo-item">
+                            <span class="cultivo-emoji">{{ cultivo.emoji }}</span>
+                            <span>{{ cultivo.nombre }}</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- SIN DATOS -->
+            {% if not mes_datos.siembra and not mes_datos.trasplante and not mes_datos.cosecha %}
+            <div class="sin-datos">
+                Sin actividades este mes
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alerta-vacia">
+    ℹ️ No se encontraron cultivos para los criterios seleccionados.
+</div>
+{% endif %}
+
+<!-- INFORMACIÓN SOBRE EL CALENDARIO -->
+<div style="background: white; padding: 20px; border-radius: 12px; margin-top: 30px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
+    <h5 style="color: #2e7d32; margin-bottom: 15px;">💡 Cómo usar este calendario</h5>
+    <ul style="margin: 0; padding-left: 20px;">
+        <li>Utiliza los filtros para mostrar solo los meses de interés</li>
+        <li>Selecciona qué tipo de actividades deseas ver (Siembra, Trasplante, Cosecha)</li>
+        <li>Cada tarjeta de mes muestra los cultivos a realizar en ese período</li>
+        <li>Los datos provienen de la información registrada en cada cultivo</li>
+        <li>Para cambiar los meses, edita cada cultivo en el catálogo</li>
+    </ul>
+</div>
+
+<script>
+    // Preseleccionar todos los meses por defecto si no hay filtros
+    document.addEventListener('DOMContentLoaded', function() {
+        const filtroForm = document.getElementById('filtro-form');
+        const checkboxesMes = document.querySelectorAll('input[name="mes"]');
+        const checkboxesAccion = document.querySelectorAll('input[name="accion"]');
+        
+        // Si no hay ningún checkbox marcado, marcar todos
+        const hayMeses = Array.from(checkboxesMes).some(c => c.checked);
+        const hayAcciones = Array.from(checkboxesAccion).some(c => c.checked);
+        
+        if (!hayMeses) {
+            checkboxesMes.forEach(c => c.checked = true);
+        }
+        if (!hayAcciones) {
+            checkboxesAccion.forEach(c => c.checked = true);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .form-control, .form-select {
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: #2e7d32;
+    box-shadow: 0 0 0 0.2rem rgba(46,125,50,0.25);
+  }
+  .form-check-input { width: 1.25em; height: 1.25em; margin-top: 0.3em; }
+  .form-check-input:checked { background-color: #2e7d32; border-color: #2e7d32; }
+
+  .section-title {
+    color: #2e7d32;
+    border-bottom: 2px solid #2e7d32;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Contenedor de plantaciones con scroll */
+  #plantaciones-container {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 0.75rem 1rem;
+    border-radius: 5px;
+    background: #fafafa;
+    transition: opacity 0.2s;
+  }
+  #plantaciones-container.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  #plantaciones-container .form-check {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  #plantaciones-container .form-check:last-child { border-bottom: none; }
+  #plantaciones-container .form-check-input { margin-right: 0.5rem; }
+
+  /* Badge todo el huerto */
+  .todo-huerto-badge {
+    display: none;
+    background: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    color: #2e7d32;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .todo-huerto-badge.visible { display: block; }
+
+  /* Campos de tiempo */
+  .tiempo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .tiempo-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.35rem;
+    display: block;
+  }
+  .tiempo-help {
+    font-size: 0.82rem;
+    color: #6b7280;
+    margin-top: 0.3rem;
+  }
+</style>
+
+<div class="mb-4">
+  <h2 style="color: #2e7d32;">
+    {% if tarea %}✏️ Editar Tarea{% else %}➕ Nueva Tarea{% endif %}
+  </h2>
+  <p class="text-muted">
+    {% if tarea %}Modifica los detalles de la tarea{% else %}Registra una nueva tarea en el huerto{% endif %}
+  </p>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger rounded-3">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <!-- ── 1. INFORMACIÓN PRINCIPAL ── -->
+          <h5 class="section-title">📋 Información Principal</h5>
+          <div class="row g-3 mb-4">
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="{{ form.tipo.id_for_label }}">Tipo de Tarea</label>
+              {{ form.tipo }}
+              {% if form.tipo.errors %}<div class="text-danger small mt-1">{{ form.tipo.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="{{ form.fecha.id_for_label }}">Fecha</label>
+              {{ form.fecha }}
+              {% if form.fecha.errors %}<div class="text-danger small mt-1">{{ form.fecha.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="{{ form.fecha_proxima.id_for_label }}">Próxima Fecha</label>
+              {{ form.fecha_proxima }}
+              <small class="text-muted">Fecha prevista para el siguiente seguimiento.</small>
+              {% if form.fecha_proxima.errors %}<div class="text-danger small mt-1">{{ form.fecha_proxima.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <div class="card" style="background: #f0f8f0; border: 2px solid #c8e6c9;">
+                <div class="card-body py-2 px-3">
+                  <div class="form-check">
+                    {{ form.todo_el_huerto }}
+                    <label class="form-check-label fw-500" for="{{ form.todo_el_huerto.id_for_label }}">
+                      ⚠️ Esta tarea afecta a <strong>TODO EL HUERTO</strong>
+                    </label>
+                  </div>
+                  <small class="text-muted">Riego global, tratamiento general, limpieza, etc.</small>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ── 2. PLANTACIONES AFECTADAS ── -->
+          <h5 class="section-title">🌱 Plantaciones Afectadas</h5>
+          <div class="mb-4">
+
+            <div id="todo-huerto-badge" class="todo-huerto-badge mb-3">
+              ✅ Se asignarán automáticamente todas las plantaciones activas
+            </div>
+
+            <div id="plantaciones-wrapper">
+              <label class="form-label fw-semibold">Cultivos / Plantaciones</label>
+              <small class="text-muted d-block mb-2">Selecciona las plantaciones afectadas.</small>
+
+              <div class="d-flex gap-2 mb-2">
+                <button type="button" id="btn-seleccionar-todas" class="btn btn-outline-success btn-sm">
+                  ☑️ Seleccionar todas
+                </button>
+                <button type="button" id="btn-deseleccionar-todas" class="btn btn-outline-secondary btn-sm">
+                  ☐ Deseleccionar todas
+                </button>
+              </div>
+
+              <div id="plantaciones-container">
+                {{ form.plantaciones }}
+              </div>
+              {% if form.plantaciones.errors %}
+              <div class="text-danger small mt-1">{{ form.plantaciones.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label fw-semibold" for="{{ form.zona.id_for_label }}">Zona / Área</label>
+              {{ form.zona }}
+              <small class="text-muted">Para zonas sin cultivo: T1, T2, Sector Norte, etc.</small>
+              {% if form.zona.errors %}<div class="text-danger small mt-1">{{ form.zona.errors }}</div>{% endif %}
+            </div>
+
+          </div>
+
+          <!-- ── 3. DETALLES ── -->
+          <h5 class="section-title">📝 Detalles de la Tarea</h5>
+          <div class="mb-4">
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ form.descripcion.id_for_label }}">Observaciones</label>
+              {{ form.descripcion }}
+              <small class="text-muted">Notas sobre cómo se realizó la tarea y resultados observados.</small>
+              {% if form.descripcion.errors %}<div class="text-danger small mt-1">{{ form.descripcion.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ form.estado_suelo.id_for_label }}">🌍 Estado del Suelo</label>
+              {{ form.estado_suelo }}
+              <small class="text-muted">Humedad, textura, color, temperatura, plagas observadas, etc.</small>
+              {% if form.estado_suelo.errors %}<div class="text-danger small mt-1">{{ form.estado_suelo.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">⏱️ Duración de la Tarea</label>
+              <div class="tiempo-grid">
+                <div>
+                  <label class="tiempo-label" for="{{ form.tiempo_estimado_min.id_for_label }}">
+                    Tiempo estimado (min)
+                  </label>
+                  {{ form.tiempo_estimado_min }}
+                  <div class="tiempo-help">¿Cuánto tiempo crees que llevará?</div>
+                  {% if form.tiempo_estimado_min.errors %}<div class="text-danger small mt-1">{{ form.tiempo_estimado_min.errors }}</div>{% endif %}
+                </div>
+                <div>
+                  <label class="tiempo-label" for="{{ form.tiempo_real_min.id_for_label }}">
+                    Tiempo real (min)
+                  </label>
+                  {{ form.tiempo_real_min }}
+                  <div class="tiempo-help">¿Cuánto tiempo llevó realmente?</div>
+                  {% if form.tiempo_real_min.errors %}<div class="text-danger small mt-1">{{ form.tiempo_real_min.errors }}</div>{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-check">
+              {{ form.completada }}
+              <label class="form-check-label" for="{{ form.completada.id_for_label }}">
+                ✅ Marcar como completada
+              </label>
+            </div>
+
+          </div>
+
+          <!-- Botones -->
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-success btn-lg flex-fill">
+              {% if tarea %}💾 Guardar Cambios{% else %}✅ Crear Tarea{% endif %}
+            </button>
+            <a href="{% url 'lista_tareas' %}" class="btn btn-secondary btn-lg flex-fill">Cancelar</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #e8f5e9, #f1f8f6);">
+      <div class="card-body">
+        <h6 style="color: #2e7d32;">💡 Consejos</h6>
+        <ul class="list-unstyled small text-muted">
+          <li class="mb-2"><strong>Todo el huerto:</strong> Marca si la tarea afecta a todas las plantaciones (riego global, tratamiento general...).</li>
+          <li class="mb-2"><strong>Plantaciones:</strong> Si no es todo el huerto, selecciona exactamente cuáles están afectadas.</li>
+          <li class="mb-2"><strong>Zona:</strong> Para tareas en zonas sin cultivo registrado.</li>
+          <li class="mb-2"><strong>Tiempo estimado:</strong> Ayuda a planificar tu jornada. Con el tiempo aprenderás los tiempos reales.</li>
+          <li><strong>Estado del suelo:</strong> Registra humedad, textura, plagas observadas...</li>
+        </ul>
+      </div>
+    </div>
+
+    {% if tarea %}
+    <div class="card border-0 shadow-sm mt-3" style="background: #fff8e1;">
+      <div class="card-body">
+        <h6 style="color: #f57c00;">⏰ Info de la Tarea</h6>
+        <p class="mb-1 small"><strong>ID:</strong> #{{ tarea.id }}</p>
+        <p class="mb-1 small"><strong>Fecha:</strong> {{ tarea.fecha|date:"d/m/Y" }}</p>
+        <p class="mb-0 small"><strong>Tipo:</strong> {{ tarea.get_tipo_display }}</p>
+        {% if tarea.tiempo_estimado_min %}
+        <p class="mb-0 small"><strong>Estimado:</strong> {{ tarea.tiempo_estimado_min }} min</p>
+        {% endif %}
+        {% if tarea.tiempo_real_min %}
+        <p class="mb-0 small"><strong>Real:</strong> {{ tarea.tiempo_real_min }} min</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const checkTodoHuerto     = document.getElementById('{{ form.todo_el_huerto.id_for_label }}');
+  const contenedor          = document.getElementById('plantaciones-container');
+  const wrapper             = document.getElementById('plantaciones-wrapper');
+  const badge               = document.getElementById('todo-huerto-badge');
+  const btnTodas            = document.getElementById('btn-seleccionar-todas');
+  const btnNinguna          = document.getElementById('btn-deseleccionar-todas');
+
+  function toggleTodoHuerto () {
+    const activo = checkTodoHuerto.checked;
+    contenedor.classList.toggle('disabled', activo);
+    badge.classList.toggle('visible', activo);
+    btnTodas.disabled  = activo;
+    btnNinguna.disabled = activo;
+    if (activo) {
+      contenedor.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    }
+  }
+
+  if (checkTodoHuerto) {
+    checkTodoHuerto.addEventListener('change', toggleTodoHuerto);
+    toggleTodoHuerto();
+  }
+
+  if (btnTodas) {
+    btnTodas.addEventListener('click', function () {
+      contenedor.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+    });
+  }
+  if (btnNinguna) {
+    btnNinguna.addEventListener('click', function () {
+      contenedor.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    });
+  }
+
+});
+</script>
+
+{% endblock %}

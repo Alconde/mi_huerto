@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0" style="background: #fff3e0;">
+            <div class="card-body text-center p-5">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🗑️</div>
+                <h3 style="color: #d32f2f;">Eliminar Plantación</h3>
+                <p class="text-muted mb-4">¿Seguro que deseas eliminar esta plantación? Esta acción es irreversible.</p>
+                <div class="card bg-white border-0 mb-4 p-3" style="text-align: left;">
+                    <p><strong>Cultivo:</strong> {{ plantacion.cultivo.nombre }}</p>
+                    <p><strong>Parcela:</strong> {{ plantacion.parcela.nombre }}</p>
+                    <p><strong>Plantado:</strong> {{ plantacion.fecha_plantacion|date:"d/m/Y" }}</p>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-lg w-100 mb-2">Eliminar permanentemente</button>
+                </form>
+                <a href="{% url 'detalle_plantacion' plantacion.id %}" class="btn btn-secondary btn-lg w-100">Cancelar</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

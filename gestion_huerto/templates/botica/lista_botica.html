@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .botica-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .botica-title {
+    color: #2e7d32;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .botica-toolbar {
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 1.5rem;
+  }
+
+  .botica-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .botica-card-header {
+    background: linear-gradient(90deg, #2e7d32, #4caf50);
+    color: white;
+    padding: 1rem 1.2rem;
+  }
+
+  .botica-card-body {
+    padding: 1rem 1.2rem 1.2rem;
+    background: #fff;
+  }
+
+  .botica-chip {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    margin-bottom: 0.7rem;
+  }
+
+  .botica-meta {
+    font-size: 0.88rem;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+  }
+
+  .botica-empty {
+    background: #f8faf8;
+    border: 1px dashed #c8d5c9;
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    color: #6b7280;
+  }
+</style>
+
+<div class="botica-header">
+  <div>
+    <h1 class="botica-title">🧪 Botica del huerto</h1>
+    <p class="text-muted mb-0">Tus preparados ecológicos, dosis, usos y precauciones.</p>
+  </div>
+  <a href="{% url 'crear_remedio_botica' %}" class="btn btn-success">+ Nuevo remedio</a>
+</div>
+
+<form method="get" class="botica-toolbar">
+  <div class="row g-3 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label">Buscar</label>
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Nombre, objetivo, ingredientes...">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Tipo</label>
+      <select name="tipo" class="form-select">
+        <option value="">Todos</option>
+        {% for value, label in tipos %}
+          <option value="{{ value }}" {% if tipo_actual == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <div class="form-check mt-4">
+        <input class="form-check-input" type="checkbox" name="activos" value="1" id="activos" {% if solo_activos == '1' %}checked{% endif %}>
+        <label class="form-check-label" for="activos">Solo activos</label>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-outline-success w-100">Filtrar</button>
+    </div>
+  </div>
+</form>
+
+{% if remedios %}
+<div class="row g-4">
+  {% for remedio in remedios %}
+  <div class="col-md-6 col-xl-4">
+    <div class="botica-card">
+      <div class="botica-card-header">
+        <h5 class="mb-0">{{ remedio.nombre }}</h5>
+      </div>
+      <div class="botica-card-body">
+        <div class="botica-chip">{{ remedio.get_tipo_display }}</div>
+
+        <div class="botica-meta"><strong>Objetivo:</strong> {{ remedio.objetivo }}</div>
+        <div class="botica-meta"><strong>Dosis:</strong> {{ remedio.dosis|default:"No indicada" }}</div>
+        <div class="botica-meta"><strong>Aplicación:</strong> {{ remedio.get_modo_aplicacion_display }}</div>
+        <div class="botica-meta"><strong>Periodicidad:</strong> {{ remedio.periodicidad|default:"No indicada" }}</div>
+
+        <div class="d-flex gap-2 mt-3">
+          <a href="{% url 'detalle_remedio_botica' remedio.pk %}" class="btn btn-sm btn-outline-success">Ver ficha</a>
+          <a href="{% url 'editar_remedio_botica' remedio.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="botica-empty">
+  <h5 class="mb-2">Todavía no tienes remedios guardados</h5>
+  <p class="mb-3">Empieza registrando preparados como jabón potásico, purín de ortiga o té de compost.</p>
+  <a href="{% url 'crear_remedio_botica' %}" class="btn btn-success">Crear primer remedio</a>
+</div>
+{% endif %}
+{% endblock %}
