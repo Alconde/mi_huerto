@@ -619,6 +619,7 @@ class Tarea(models.Model):
         ('control_plagas', 'Control de plagas'),
         ('entutorado', 'Entutorado'),
         ('foto', 'Foto'),
+        ('gallinero', 'Gallinero'),
         ('hedrar', 'Hedrado o deshierbe'),
         ('labores', 'Labores de supervisión'),        
         ('otros', 'Otros'),
