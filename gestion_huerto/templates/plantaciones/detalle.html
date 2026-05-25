@@ -399,6 +399,9 @@
 
         <div class="detalle-actions">
             <a href="{% url 'editar_plantacion' plantacion.id %}" class="btn-soft btn-soft-primary">Editar</a>
+            {% if plantacion.estado != 'finalizada' and plantacion.estado != 'perdida' %}
+                <a href="{% url 'archivar_plantacion' plantacion.id %}" class="btn-soft btn-soft-primary">Archivar cultivo</a>
+            {% endif %}
             <a href="{% url 'eliminar_plantacion' plantacion.id %}" class="btn-soft btn-soft-danger">Eliminar</a>
             <a href="{% url 'lista_plantaciones' %}" class="btn-soft btn-soft-dark">Volver</a>
         </div>
@@ -640,7 +643,7 @@
                                 {% for tarea in tareas %}
                                 <tr>
                                     <td>{{ tarea.fecha|date:"d/m/Y" }}</td>
-                                    <td>{{ tarea.titulo|default:tarea.tipo_tarea|default:"Tarea" }}</td>
+                                    <td>{{ tarea.get_tipo_display }}</td>
                                     <td>{{ tarea.descripcion|default:"—" }}</td>
                                 </tr>
                                 {% endfor %}

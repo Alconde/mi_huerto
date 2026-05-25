@@ -519,6 +519,11 @@ class TareaForm(forms.ModelForm):
             Plantacion.objects.select_related('cultivo', 'parcela')
             .order_by('cultivo__nombre', 'parcela__nombre')
         )
+        self.fields['plantaciones'].queryset = Plantacion.objects.exclude(
+            estado__in=['finalizada', 'perdida']
+        ).select_related('cultivo', 'variedad', 'parcela').order_by(
+            'parcela__nombre', 'cultivo__nombre', 'variedad__nombre'
+        )
 
         self.fields['plantaciones'].label_from_instance = lambda p: (
             f"{p.cultivo.emoji} {p.cultivo.nombre}"

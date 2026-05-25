@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from decimal import Decimal
 from django.utils import timezone
 from django.urls import reverse
@@ -110,9 +111,17 @@ class Cultivo(models.Model):
             'aliaceas': '#A8E6CF',
             'hoja': '#87CEEB',
             'gramineas': '#DEB887',
+            'umbeliferas': '#FFB347',
+            'compuestas': '#B19CD9',
             'otros': '#D3D3D3',
         }
         return color_map.get(self.familia, '#D3D3D3')
+
+    NO_RIEGO_INICIAL = {
+        'patata', 'patatas',
+        'judia', 'judias', 'judía', 'judías',
+        'maiz', 'maíz',
+    }
 
     @property
     def meses_trasplante_lista(self):
@@ -122,6 +131,16 @@ class Cultivo(models.Model):
             return [int(m.strip()) for m in self.meses_trasplante.split(',') if m.strip()]
         except ValueError:
             return []
+
+    @property
+    def necesita_riego_inicial(self):
+        """Determina si el cultivo requiere riego desde el inicio o depende de tarea de riego."""
+        if not self.nombre:
+            return True
+
+        nombre = self.nombre.strip().lower()
+        nombre = nombre.replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')
+        return nombre not in self.NO_RIEGO_INICIAL
     
     class Meta:
         verbose_name = "Cultivo"
@@ -280,22 +299,30 @@ class Parcela(models.Model):
             'cultivo_anterior', 'cultivo_siguiente'
         ).order_by('-fecha_rotacion').first()
 
+    def ultimo_cultivo_historial(self):
+        ultima = self.ultima_rotacion()
+        if not ultima:
+            return None
+        return ultima.cultivo_siguiente or ultima.cultivo_anterior
+
     def siguiente_grupo_recomendado(self):
         orden = ['fruto', 'hoja_raiz', 'leguminosa', 'bulbo']
         ultima = self.ultima_rotacion()
 
-        if not ultima or not ultima.cultivo_siguiente or not ultima.cultivo_siguiente.grupo_rotacion:
+        cultivo_referencia = ultima.cultivo_siguiente or ultima.cultivo_anterior if ultima else None
+        if not cultivo_referencia or not cultivo_referencia.grupo_rotacion:
             return 'fruto'
 
-        grupo_actual = ultima.cultivo_siguiente.grupo_rotacion
+        grupo_actual = cultivo_referencia.grupo_rotacion
         if grupo_actual not in orden:
-            return 'fruto'  
+            return 'fruto'
 
-        return orden[(orden.index(grupo_actual) + 1) % len(orden)]                  
-    
+        return orden[(orden.index(grupo_actual) + 1) % len(orden)]
+
     class Meta:
         verbose_name = "Parcela"
         verbose_name_plural = "Parcelas"
+
 
 class RotacionParcela(models.Model):
     parcela = models.ForeignKey(
@@ -344,6 +371,9 @@ class RotacionParcela(models.Model):
         verbose_name_plural = "Rotaciones de parcelas"
         ordering = ['-fecha_inicio']
 
+class PlantacionQuerySet(models.QuerySet):
+    def activas(self):
+        return self.exclude(estado__in=['finalizada', 'perdida'])
 class Plantacion(models.Model):
     PROCEDENCIA_CHOICES = [
         ('semilla_propia', 'Semilla Propia'),
@@ -435,9 +465,23 @@ class Plantacion(models.Model):
     )
     
     notas = models.TextField(blank=True)
-    
+    objects = PlantacionQuerySet.as_manager()
     def __str__(self):
         return f"{self.cultivo.nombre} en {self.parcela.nombre} ({self.columna_inicio}x{self.fila_inicio} - {self.columna_fin}x{self.fila_fin})"
+
+    def archivar(self, fecha_archivo=None):
+        """Marca la plantación como finalizada y guarda el cultivo en el historial de rotación."""
+        if self.estado != 'finalizada':
+            self.estado = 'finalizada'
+            self.save(update_fields=['estado'])
+
+        fecha_rotacion = fecha_archivo or timezone.localdate()
+        HistorialRotacion.objects.create(
+            parcela=self.parcela,
+            cultivo_anterior=self.cultivo,
+            fecha_rotacion=fecha_rotacion,
+            observaciones='Archivado al finalizar el ciclo.'
+        )
 
     @property
     def nombre_completo(self):
@@ -605,15 +649,16 @@ class Plantacion(models.Model):
             'dias_totales_estimados': dias_esperados
         }
 
-        class Meta:
-            verbose_name = "Plantación"
-            verbose_name_plural = "Plantaciones"
-            ordering = ['-fecha_siembra']
+    class Meta:
+        verbose_name = "Plantación"
+        verbose_name_plural = "Plantaciones"
+        ordering = ['-fecha_siembra']
 
 
 class Tarea(models.Model):
     TIPO_CHOICES = [                 
         ('abono', 'Abono'),
+        ('aporcar', 'Aporcado o escarda'),
         ('compostaje', 'Compostaje'),        
         ('cosecha', 'Cosecha'),       
         ('control_plagas', 'Control de plagas'),

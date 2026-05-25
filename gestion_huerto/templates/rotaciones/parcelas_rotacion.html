@@ -84,16 +84,16 @@
                         <!-- BLOQUE A -->
                         <div class="col-md-3 mb-3">
                             <div class="border rounded p-3 h-100">
-                                <h6>Cultivo predominante</h6>
-                                <p class="mb-1"><strong>{{ item.cultivo_predominante }}</strong></p>
-                                <p class="mb-0 text-muted">{{ item.familia_predominante }}</p>
+                                <h6>Estado actual</h6>
+                                <p class="mb-1"><strong>{{ item.cultivo_actual }}</strong></p>
+                                <p class="mb-0 text-muted">{{ item.familia_actual }}</p>
                             </div>
                         </div>
 
                         <!-- BLOQUE B -->
                         <div class="col-md-3 mb-3">
                             <div class="border rounded p-3 h-100">
-                                <h6>Lo que había antes</h6>
+                                <h6>Cultivo anterior</h6>
                                 <p class="mb-1"><strong>{{ item.cultivo_anterior|default:"Sin registro" }}</strong></p>
                                 <p class="mb-0 text-muted">{{ item.familia_anterior|default:"-" }}</p>
                             </div>
@@ -102,7 +102,7 @@
                         <!-- BLOQUE C -->
                         <div class="col-md-3 mb-3">
                             <div class="border rounded p-3 h-100">
-                                <h6>Siguiente plantación</h6>
+                                <h6>Siguiente propuesta</h6>
                                 <p class="mb-1"><strong>{{ item.siguiente_grupo }}</strong></p>
                                 <p class="mb-0 text-muted">{{ item.sugerencias }}</p>
                             </div>

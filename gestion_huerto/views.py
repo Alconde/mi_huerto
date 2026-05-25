@@ -12,11 +12,91 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import json
 from django.contrib import messages
-from .utils import buscar_warning_rotacion
+from .utils import buscar_warning_rotacion, preparar_resumen_tooltip_plantacion
 from itertools import chain
 from operator import attrgetter
 from decimal import Decimal
+from collections import defaultdict
+import string
 
+
+
+def calcular_estado_riego_plantacion(plantacion, hoy=None):
+    hoy = hoy or timezone.localdate()
+
+    ultima_tarea_riego = (
+        Tarea.objects
+        .filter(
+            Q(plantacion=plantacion) | Q(plantaciones=plantacion),
+            tipo='riego',
+            completada=True
+        )
+        .distinct()
+        .order_by('-fecha')
+        .first()
+    )
+
+    if ultima_tarea_riego:
+        dias_desde_riego = (hoy - ultima_tarea_riego.fecha).days
+        plantacion.dias_desde_riego = dias_desde_riego
+        plantacion.estado_riego = (
+            f'Último riego hace {dias_desde_riego} día'
+            if dias_desde_riego == 1
+            else f'Último riego hace {dias_desde_riego} días'
+        )
+
+        if dias_desde_riego <= 3:
+            plantacion.color_riego = '0000ff'
+        elif dias_desde_riego <= 6:
+            plantacion.color_riego = 'ffff00'
+        else:
+            plantacion.color_riego = 'ff0000'
+
+        return plantacion
+
+    es_trasplante_o_plantel = plantacion.modo_implantacion in ['semillero', 'plantel'] or bool(plantacion.fecha_trasplante)
+    es_siembra_directa = plantacion.modo_implantacion == 'directa'
+
+    ya_arranco = (
+        bool(plantacion.fecha_germinado_real) or
+        plantacion.estado in ['germinada', 'trasplantada', 'encultivo', 'encosecha']
+    )
+
+    if es_siembra_directa and not ya_arranco:
+        if plantacion.cultivo and not plantacion.cultivo.necesita_riego_inicial:
+            plantacion.estado_riego = 'No necesita riego por ahora'
+        else:
+            plantacion.estado_riego = 'No se ha regado todavía'
+        plantacion.color_riego = '6c757d'
+        plantacion.dias_desde_riego = None
+        return plantacion
+
+    if plantacion.cultivo and not plantacion.cultivo.necesita_riego_inicial and not es_trasplante_o_plantel:
+        plantacion.estado_riego = 'No necesita riego por ahora'
+        plantacion.color_riego = '6c757d'
+        plantacion.dias_desde_riego = None
+        return plantacion
+
+    fecha_inicio_control = plantacion.fecha_trasplante or plantacion.fecha_germinado_real or plantacion.fecha_siembra
+
+    if not fecha_inicio_control:
+        plantacion.estado_riego = 'Sin datos para calcular riego'
+        plantacion.color_riego = '6c757d'
+        plantacion.dias_desde_riego = None
+        return plantacion
+
+    dias_desde_riego = (hoy - fecha_inicio_control).days
+    plantacion.dias_desde_riego = dias_desde_riego
+    plantacion.estado_riego = 'No se ha realizado riego'
+
+    if dias_desde_riego <= 7:
+        plantacion.color_riego = '0000ff'
+    elif dias_desde_riego <= 10:
+        plantacion.color_riego = 'ffff00'
+    else:
+        plantacion.color_riego = 'ff0000'
+
+    return plantacion
 
 
 def dashboard(request):
@@ -230,59 +310,85 @@ def lista_parcelas(request):
     parcelas = Parcela.objects.all()
     return render(request, 'parcelas/lista.html', {'parcelas': parcelas})
 
+
+
 def detalle_parcela(request, parcela_id):
     import string
+    from django.db.models import Q, Prefetch
+    from django.shortcuts import get_object_or_404, render
+    from django.utils import timezone
 
     parcela = get_object_or_404(Parcela, pk=parcela_id)
-
-    anio_consulta = int(request.GET.get('anio', timezone.localdate().year))
-
-    plantaciones_activas = Plantacion.objects.filter(
-        parcela=parcela
-    ).filter(
-        Q(fecha_siembra__year=anio_consulta) |
-        Q(fecha_trasplante__year=anio_consulta) |
-        Q(fecha_recoleccion_esperada__year=anio_consulta)
-    ).select_related('cultivo', 'parcela', 'variedad').prefetch_related('tareas')
-
+    anioconsulta = int(request.GET.get('anio', timezone.localdate().year))
     hoy = timezone.localdate()
-    for plantacion in plantaciones_activas:
-        if plantacion.fecha_siembra:
-            dias_desde_siembra = (hoy - plantacion.fecha_siembra).days
-        elif plantacion.fecha_trasplante:
-            dias_desde_siembra = (hoy - plantacion.fecha_trasplante).days
-        else:
-            dias_desde_siembra = 0
 
-        if dias_desde_siembra < 0:
-            plantacion.color_riego = '#0000ff'
-        elif dias_desde_siembra <= 6:
-            plantacion.color_riego = '#0000ff'
-        elif dias_desde_siembra <= 10:
-            plantacion.color_riego = '#ffff00'
-        else:
-            plantacion.color_riego = '#ff0000'
+    tareas_fk_qs = Tarea.objects.order_by('-fecha', '-id')
+    tareas_m2m_qs = Tarea.objects.order_by('-fecha', '-id')
+
+    plantaciones_activas = (
+        Plantacion.objects.activas()
+        .filter(parcela=parcela)
+        .filter(
+            Q(fechasiembra__year=anioconsulta) |
+            Q(fechatrasplante__year=anioconsulta) |
+            Q(fecharecoleccioninicio__year=anioconsulta) |
+            Q(fecharecoleccionesperada__year=anioconsulta)
+        )
+        .select_related('cultivo', 'parcela', 'variedad')
+        .prefetch_related(
+            Prefetch('tareas', queryset=tareas_fk_qs, to_attr='tareas_fk_prefetch'),
+            Prefetch('tareas_m2m', queryset=tareas_m2m_qs, to_attr='tareas_m2m_prefetch'),
+        )
+        .distinct()
+    )
+
+    for plantacion in plantaciones_activas:
+        calcular_estado_riego_plantacion(plantacion, hoy)
+
+        tareas_unificadas = {}
+        for t in getattr(plantacion, 'tareas_fk_prefetch', []):
+            tareas_unificadas[t.id] = t
+        for t in getattr(plantacion, 'tareas_m2m_prefetch', []):
+            tareas_unificadas[t.id] = t
+
+        tareas_ordenadas = sorted(
+            tareas_unificadas.values(),
+            key=lambda t: (t.fecha or hoy, t.id),
+            reverse=True
+        )
+
+        plantacion.tareas_resumen = tareas_ordenadas
+
+        plantacion.tareas_realizadas = sorted(
+            [t for t in tareas_unificadas.values() if t.completada],
+            key=lambda t: (t.fecha or hoy, t.id),
+            reverse=True
+        )[:5]
+
+        plantacion.tareas_programadas = sorted(
+            [t for t in tareas_unificadas.values() if not t.completada],
+            key=lambda t: (t.fecha_proxima or t.fecha or hoy, t.id)
+        )[:5]
 
     cabecera_cols = [string.ascii_uppercase[i] for i in range(parcela.columnas)]
-    grid = []
 
+    grid = []
     for fila in range(1, parcela.filas + 1):
         fila_datos = []
         for columna in range(parcela.columnas):
             existe = True
 
-            if parcela.tipo_tabla == 2:  # Triangular
-                ancho_fila = 6 + (fila - 1) * (6 / 11)
+            if parcela.tipotabla == 2:
+                ancho_fila = 6 + (fila - 1) if fila <= 6 else 11
                 existe = columna < ancho_fila
-            elif parcela.tipo_tabla == 3:  # Diagonal
-                altura_minima = 6 - (columna * (6 / 9))
-                existe = fila >= altura_minima
+            elif parcela.tipotabla == 3:
+                altura_minima = 6 - columna if columna <= 6 else 0
+                existe = fila > altura_minima
 
             if existe:
                 plantas_en_celda = [
                     p for p in plantaciones_activas
-                    if p.fila_inicio <= fila <= p.fila_fin
-                    and p.columna_inicio <= columna <= p.columna_fin
+                    if p.filainicio <= fila <= p.filafin and p.columnainicio <= columna <= p.columnafin
                 ]
                 fila_datos.append({
                     'existe': True,
@@ -303,45 +409,50 @@ def detalle_parcela(request, parcela_id):
     }
 
     familia_colors = {
-        'solanaceas': '#FF6B6B',
-        'leguminosas': '#4ECDC4',
-        'cruciferas': '#95E1D3',
-        'cucurbitaceas': '#FFE66D',
-        'aliaceas': '#A8E6CF',
-        'hoja': '#87CEEB',
-        'gramineas': '#DEB887',
-        'otros': '#D3D3D3',
+        'solanaceas': 'FF6B6B',
+        'leguminosas': '4ECDC4',
+        'cruciferas': '95E1D3',
+        'cucurbitaceas': 'FFE66D',
+        'aliaceas': 'A8E6CF',
+        'hoja': '87CEEB',
+        'gramineas': 'DEB887',
+        'otros': 'D3D3D3',
     }
 
     familia_labels = {
-        'solanaceas': 'Solanáceas (Tomate, Pimiento, Patata)',
-        'leguminosas': 'Leguminosas (Haba, Guisante, Alubia)',
-        'cruciferas': 'Crucíferas (Brócoli, Repollo, Coliflor)',
-        'cucurbitaceas': 'Cucurbitáceas (Calabaza, Calabacín, Melón)',
-        'aliaceas': 'Alíaceas (Ajo, Cebolla, Puerro)',
-        'hoja': 'Hoja (Lechuga, Acelga)',
-        'gramineas': 'Gramíneas (Maíz)',
+        'solanaceas': 'Solanáceas',
+        'leguminosas': 'Leguminosas',
+        'cruciferas': 'Crucíferas',
+        'cucurbitaceas': 'Cucurbitáceas',
+        'aliaceas': 'Aliáceas',
+        'hoja': 'Hoja',
+        'gramineas': 'Gramíneas',
         'otros': 'Otros',
     }
 
     leyenda = []
     familias_vistas = set()
     cultivos_familias = Cultivo.objects.values_list('familia', flat=True).distinct()
+
     for familia in cultivos_familias:
         if familia not in familias_vistas:
             familias_vistas.add(familia)
             leyenda.append({
-                'color': familia_colors.get(familia, '#D3D3D3'),
+                'color': familia_colors.get(familia, 'D3D3D3'),
                 'label': familia_labels.get(familia, familia),
             })
 
-    return render(request, 'parcelas/detalle.html', {
-        'parcela': parcela,
-        'p_data': p_data,
-        'plantaciones': plantaciones_activas,
-        'anio_consulta': anio_consulta,
-        'leyenda': leyenda,
-    })
+    return render(
+        request,
+        'parcelas/detalle.html',
+        {
+            'parcela': parcela,
+            'p_data': p_data,
+            'plantaciones': plantaciones_activas,
+            'anioconsulta': anioconsulta,
+            'leyenda': leyenda,
+        }
+    )
 
 def editar_parcela(request, parcela_id=None):
     if parcela_id:
@@ -392,6 +503,8 @@ def lista_plantaciones(request):
 
     if estado_param in ESTADOS_MAP:
         plantaciones_qs = plantaciones_qs.filter(estado=ESTADOS_MAP[estado_param])
+    else:
+        plantaciones_qs = plantaciones_qs.exclude(estado__in=['finalizada', 'perdida'])
 
     # 4. Orden lógico: por parcela, fecha de plantación (propiedad) aproximada y cultivo
     plantaciones_qs = plantaciones_qs.order_by('parcela__nombre', 'fecha_siembra', 'cultivo__nombre')
@@ -479,6 +592,20 @@ def detalle_plantacion(request, plantacion_id):
         'cosechas': cosechas,
         'valor_total_cosechas': valor_total_cosechas,
     })
+
+
+def archivar_plantacion(request, plantacion_id):
+    plantacion = get_object_or_404(Plantacion, pk=plantacion_id)
+
+    if request.method == 'POST':
+        plantacion.archivar()
+        messages.success(request, 'Plantación archivada y registrada en el historial de rotación.')
+        return redirect('detalle_plantacion', plantacion_id=plantacion.id)
+
+    return render(request, 'plantaciones/archivar_confirmar.html', {
+        'plantacion': plantacion,
+    })
+
 
 def agregar_foto_plantacion(request, plantacion_id):
     plantacion = get_object_or_404(Plantacion, pk=plantacion_id)
@@ -1209,147 +1336,173 @@ def calendario(request):
 
 def plano_huerto(request):
     """
-    Genera el mapa de cultivos del huerto con grid visual de plantaciones.
-    
-    Mejoras aplicadas:
-    - Plantaciones activas correctamente filtradas por ciclo de vida
-    - Estado de riego basado en última tarea real de riego
-    - Rendimiento optimizado con prefetch y agrupación
-    - Compatibilidad con campos deprecados
+    Genera el mapa general del huerto:
+    - solo plantaciones activas
+    - visibles si su ciclo toca el año consultado
+    - estado de riego calculado a partir de tareas reales
+    - tooltip con tareas realizadas y programadas completas
     """
-    from datetime import timedelta
     from collections import defaultdict
     import string
-    
-    # Año seleccionado (por defecto el actual)
+    from django.db.models import Q, Prefetch
+    from django.shortcuts import render
+    from django.utils import timezone
+
     anio_consulta = int(request.GET.get('anio', timezone.localdate().year))
-    
-    # Lista de años disponibles
-    plantaciones_all = Plantacion.objects.exclude(
-        fecha_siembra__isnull=True
-    ).values_list('fecha_siembra__year', flat=True).distinct()
-    
-    plantaciones_trasplante = Plantacion.objects.exclude(
-        fecha_trasplante__isnull=True
-    ).values_list('fecha_trasplante__year', flat=True).distinct()
-    
-    anos_set = set(plantaciones_all) | set(plantaciones_trasplante)
-    lista_anios = sorted(anos_set) if anos_set else [timezone.localdate().year]
-    
-    # Fechas límite del año consultado
     inicio_anio = timezone.datetime(anio_consulta, 1, 1).date()
     fin_anio = timezone.datetime(anio_consulta, 12, 31).date()
-    
-    # Obtener plantaciones que ESTÁN VIVAS durante el año consultado
-    # Una plantación está viva si:
-    # - Tiene fecha de inicio (siembra o trasplante) antes del fin del año
-    # - Y no ha terminado antes del inicio del año (o no tiene fecha de fin)
-    plantaciones_activas = Plantacion.objects.filter(
-        Q(
-            # Plantaciones que empiezan durante o antes del año consultado
-            Q(fecha_siembra__lte=fin_anio) | Q(fecha_trasplante__lte=fin_anio)
-        ),
-        Q(
-            # Y que no han terminado antes del inicio del año
+    hoy = timezone.localdate()
+    proxima_semana = hoy + timezone.timedelta(days=7)
+
+    tareas_fk_qs = Tarea.objects.order_by('-fecha', '-id')
+    tareas_m2m_qs = Tarea.objects.order_by('-fecha', '-id')
+
+    plantaciones_qs = (
+        Plantacion.objects.activas()
+        .filter(
+            Q(fecha_siembra__lte=fin_anio) |
+            Q(fecha_trasplante__lte=fin_anio)
+        )
+        .filter(
             Q(fecha_recoleccion_inicio__isnull=True) |
             Q(fecha_recoleccion_inicio__gte=inicio_anio) |
             Q(fecha_recoleccion_esperada__isnull=True) |
             Q(fecha_recoleccion_esperada__gte=inicio_anio)
         )
-    ).select_related(
-        'cultivo', 'parcela', 'variedad'
-    ).prefetch_related(
-        'tareas'
-    ).distinct()
-    
-    # Calcular estado de riego basado en la última tarea de riego real
-    hoy = timezone.localdate()
-    
+        .select_related('cultivo', 'parcela', 'variedad')
+        .prefetch_related(
+            Prefetch('tareas', queryset=tareas_fk_qs, to_attr='tareas_fk_prefetch'),
+            Prefetch('tareas_m2m', queryset=tareas_m2m_qs, to_attr='tareas_m2m_prefetch'),
+        )
+        .distinct()
+        .order_by('parcela__nombre', 'fila_inicio', 'columna_inicio', 'cultivo__nombre')
+    )
+
+    plantaciones_activas = list(plantaciones_qs)
+
     for plantacion in plantaciones_activas:
-        # Buscar la última tarea de riego completada para esta plantación
-        ultima_tarea_riego = plantacion.tareas.filter(
-            tipo='riego',
-            completada=True
-        ).order_by('-fecha').first()
-        
-        if ultima_tarea_riego:
-            dias_desde_riego = (hoy - ultima_tarea_riego.fecha).days
-        else:
-            # Si no hay riegos registrados, usar la fecha de inicio como fallback
-            fecha_inicio = plantacion.fecha_trasplante or plantacion.fecha_siembra
-            if fecha_inicio:
-                dias_desde_riego = (hoy - fecha_inicio).days
+        tareas_unificadas = {}
+
+        for t in getattr(plantacion, 'tareas_fk_prefetch', []):
+            tareas_unificadas[t.id] = t
+
+        for t in getattr(plantacion, 'tareas_m2m_prefetch', []):
+            tareas_unificadas[t.id] = t
+
+        tareas_ordenadas = sorted(
+            tareas_unificadas.values(),
+            key=lambda t: (t.fecha or hoy, t.id),
+            reverse=True
+        )
+
+        plantacion.tareas_realizadas = sorted(
+            [t for t in tareas_ordenadas if t.completada],
+            key=lambda t: (t.fecha or hoy, t.id),
+            reverse=True
+        )[:5]
+
+        plantacion.tareas_programadas = sorted(
+            [t for t in tareas_ordenadas if not t.completada],
+            key=lambda t: (t.fecha_proxima or t.fecha or hoy, t.id)
+        )[:5]
+
+        riegos_realizados = [
+            t for t in tareas_ordenadas
+            if t.tipo == 'riego' and t.completada
+        ]
+
+        ultimo_riego = sorted(
+            riegos_realizados,
+            key=lambda t: (t.fecha or hoy, t.id),
+            reverse=True
+        )[0] if riegos_realizados else None
+
+        if ultimo_riego:
+            dias_desde_riego = (hoy - ultimo_riego.fecha).days
+            plantacion.dias_desde_riego = dias_desde_riego
+            plantacion.estado_riego = f"Último riego hace {dias_desde_riego} día{'s' if dias_desde_riego != 1 else ''}"
+
+            if dias_desde_riego <= 3:
+                plantacion.color_riego = '#0000ff'
+            elif dias_desde_riego <= 6:
+                plantacion.color_riego = '#ffff00'
             else:
-                dias_desde_riego = 999  # Valor alto para marcar como urgente
-        
-        # Asignar color según días desde último riego
-        if dias_desde_riego < 0:
-            plantacion.color_riego = '#0000ff'  # Futuro (no debería pasar)
-        elif dias_desde_riego <= 3:
-            plantacion.color_riego = '#0000ff'  # Azul: óptimo (riego reciente)
-        elif dias_desde_riego <= 6:
-            plantacion.color_riego = '#ffff00'  # Amarillo: atención
+                plantacion.color_riego = '#ff0000'
         else:
-            plantacion.color_riego = '#ff0000'  # Rojo: urgente
-        
-        plantacion.dias_desde_riego = dias_desde_riego
-    
-    # Agrupar plantaciones por parcela para optimizar el bucle
+            plantacion.estado_riego = 'No se ha realizado riego'
+
+            if plantacion.cultivo and not plantacion.cultivo.necesita_riego_inicial:
+                plantacion.color_riego = '#6c757d'
+                plantacion.dias_desde_riego = None
+            else:
+                fecha_inicio = plantacion.fecha_trasplante or plantacion.fecha_siembra
+                dias_desde_inicio = (hoy - fecha_inicio).days if fecha_inicio else 999
+                plantacion.dias_desde_riego = dias_desde_inicio
+
+                if dias_desde_inicio <= 3:
+                    plantacion.color_riego = '#0000ff'
+                elif dias_desde_inicio <= 6:
+                    plantacion.color_riego = '#ffff00'
+                else:
+                    plantacion.color_riego = '#ff0000'
+
     plantaciones_por_parcela = defaultdict(list)
-    for p in plantaciones_activas:
-        plantaciones_por_parcela[p.parcela_id].append(p)
-    
-    # Generar datos de parcelas
+    for plantacion in plantaciones_activas:
+        if plantacion.parcela_id:
+            plantaciones_por_parcela[plantacion.parcela_id].append(plantacion)
+
     parcelas = Parcela.objects.all().order_by('nombre')
     parcelas_data = []
-    
+
     for parcela in parcelas:
-        # Generar columnas (A, B, C, ...)
-        cabecera_cols = [string.ascii_uppercase[i] for i in range(parcela.columnas)]
-        
-        # Obtener solo las plantaciones de esta parcela
         plantaciones_parcela = plantaciones_por_parcela.get(parcela.id, [])
-        
-        # Generar grid
+        plantaciones_por_fila = defaultdict(list)
+
+        for plantacion in plantaciones_parcela:
+            for fila in range(plantacion.fila_inicio, plantacion.fila_fin + 1):
+                plantaciones_por_fila[fila].append(plantacion)
+
+        cabecera_cols = [string.ascii_uppercase[i] for i in range(parcela.columnas)]
         grid = []
+
         for fila in range(1, parcela.filas + 1):
             fila_datos = []
+
             for columna in range(parcela.columnas):
-                # Verificar si la celda existe según tipo de tabla
                 existe = True
-                if parcela.tipo_tabla == 2:  # Triangular
+
+                if parcela.tipo_tabla == 2:
                     ancho_fila = 6 + (fila - 1) * (6 / 11)
                     existe = columna < ancho_fila
-                elif parcela.tipo_tabla == 3:  # Diagonal
+                elif parcela.tipo_tabla == 3:
                     altura_minima = 6 - (columna * (6 / 9))
                     existe = fila >= altura_minima
-                
-                if existe:
-                    # Buscar plantaciones solo en las de esta parcela
-                    plantas_en_celda = [
-                        p for p in plantaciones_parcela
-                        if (p.fila_inicio <= fila <= p.fila_fin and
-                            p.columna_inicio <= columna <= p.columna_fin)
-                    ]
-                    fila_datos.append({
-                        'existe': True,
-                        'plantas': plantas_en_celda,
-                    })
-                else:
+
+                if not existe:
                     fila_datos.append({
                         'existe': False,
                         'plantas': [],
                     })
-            
+                    continue
+
+                plantas_en_celda = [
+                    p for p in plantaciones_por_fila.get(fila, [])
+                    if p.columna_inicio <= columna <= p.columna_fin
+                ]
+
+                fila_datos.append({
+                    'existe': True,
+                    'plantas': plantas_en_celda,
+                })
+
             grid.append(fila_datos)
-        
+
         parcelas_data.append({
             'info': parcela,
             'cabecera_cols': cabecera_cols,
             'grid': grid,
         })
-    
-    # Generar leyenda de familias
+
     familia_colors = {
         'solanaceas': '#FF6B6B',
         'leguminosas': '#4ECDC4',
@@ -1362,7 +1515,7 @@ def plano_huerto(request):
         'compuestas': '#B19CD9',
         'otros': '#D3D3D3',
     }
-    
+
     familia_labels = {
         'solanaceas': 'Solanáceas (Tomate, Pimiento, Patata)',
         'leguminosas': 'Leguminosas (Haba, Guisante, Alubia)',
@@ -1375,10 +1528,11 @@ def plano_huerto(request):
         'compuestas': 'Compuestas (Alcachofa, Girasol)',
         'otros': 'Otros',
     }
-    
+
     leyenda = []
     familias_vistas = set()
     cultivos_familias = Cultivo.objects.values_list('familia', flat=True).distinct()
+
     for familia in cultivos_familias:
         if familia not in familias_vistas:
             familias_vistas.add(familia)
@@ -1386,17 +1540,24 @@ def plano_huerto(request):
                 'color': familia_colors.get(familia, '#D3D3D3'),
                 'label': familia_labels.get(familia, familia.capitalize()),
             })
-    
-    # Alertas de cosecha próxima (próximos 7 días)
-    proxima_semana = hoy + timedelta(days=7)
-    
-    # Usar la propiedad fecha_cosecha_estimada o buscar en ambos campos
-    alertas_cosecha = []
-    for p in plantaciones_activas:
-        fecha_cosecha = p.fecha_cosecha_estimada  # Usa la propiedad que ya maneja compatibilidad
-        if fecha_cosecha and hoy <= fecha_cosecha <= proxima_semana:
-            alertas_cosecha.append(p)
-    
+
+    anos_siembra = Plantacion.objects.exclude(
+        fecha_siembra__isnull=True
+    ).values_list('fecha_siembra__year', flat=True)
+
+    anos_trasplante = Plantacion.objects.exclude(
+        fecha_trasplante__isnull=True
+    ).values_list('fecha_trasplante__year', flat=True)
+
+    lista_anios = sorted(set(anos_siembra) | set(anos_trasplante))
+    if not lista_anios:
+        lista_anios = [timezone.localdate().year]
+
+    alertas_cosecha = [
+        p for p in plantaciones_activas
+        if p.fecha_cosecha_estimada and hoy <= p.fecha_cosecha_estimada <= proxima_semana
+    ]
+
     context = {
         'parcelas_data': parcelas_data,
         'leyenda': leyenda,
@@ -1404,7 +1565,7 @@ def plano_huerto(request):
         'anio_consulta': anio_consulta,
         'alertas_cosecha': alertas_cosecha,
     }
-    
+
     return render(request, 'plano.html', context)
 
 class RotacionResumenListView(ListView):
@@ -1584,17 +1745,19 @@ def rotaciones_parcelas(request):
     secuencia = ['leguminosa', 'hoja_raiz', 'fruto', 'bulbo']
 
     for parcela in parcelas:
-        plantaciones = list(parcela.plantaciones.all())
+        plantaciones_activas = list(
+            parcela.plantaciones.exclude(estado__in=['finalizada', 'perdida'])
+            .select_related('cultivo')
+        )
 
         contador_cultivos = Counter()
         contador_familias = Counter()
         familias_presentes = set()
 
-        for plantacion in plantaciones:
+        for plantacion in plantaciones_activas:
             if plantacion.cultivo:
                 nombre_cultivo = plantacion.cultivo.nombre
                 familia = plantacion.cultivo.get_familia_display()
-                grupo = plantacion.cultivo.grupo_rotacion
 
                 peso = plantacion.cantidad if plantacion.cantidad else 1
 
@@ -1602,36 +1765,50 @@ def rotaciones_parcelas(request):
                 contador_familias[familia] += peso
                 familias_presentes.add(familia)
 
-        cultivo_predominante = contador_cultivos.most_common(1)[0][0] if contador_cultivos else 'Sin plantaciones'
-        familia_predominante = contador_familias.most_common(1)[0][0] if contador_familias else 'Sin familia definida'
+        cultivo_predominante = contador_cultivos.most_common(1)[0][0] if contador_cultivos else None
+        familia_predominante = contador_familias.most_common(1)[0][0] if contador_familias else None
 
         plantacion_predominante = None
-        if plantaciones and contador_cultivos:
+        if plantaciones_activas and contador_cultivos:
             nombre_predominante = contador_cultivos.most_common(1)[0][0]
-            for plantacion in plantaciones:
+            for plantacion in plantaciones_activas:
                 if plantacion.cultivo and plantacion.cultivo.nombre == nombre_predominante:
                     plantacion_predominante = plantacion
                     break
 
         grupo_actual_codigo = None
+        cultivo_actual = None
+        familia_actual = None
         if plantacion_predominante and plantacion_predominante.cultivo:
             grupo_actual_codigo = plantacion_predominante.cultivo.grupo_rotacion
+            cultivo_actual = plantacion_predominante.cultivo.nombre
+            familia_actual = plantacion_predominante.cultivo.get_familia_display()
 
         historial = parcela.historial_rotaciones.all().order_by('-fecha_rotacion')
         ultima_rotacion = historial.first()
 
         cultivo_anterior = None
         familia_anterior = None
-
         if ultima_rotacion and ultima_rotacion.cultivo_anterior:
             cultivo_anterior = ultima_rotacion.cultivo_anterior.nombre
             familia_anterior = ultima_rotacion.cultivo_anterior.get_familia_display()
+
+        if not cultivo_actual and ultima_rotacion:
+            referencia_actual = ultima_rotacion.cultivo_siguiente or ultima_rotacion.cultivo_anterior
+            if referencia_actual:
+                cultivo_actual = referencia_actual.nombre
+                familia_actual = referencia_actual.get_familia_display()
+                grupo_actual_codigo = referencia_actual.grupo_rotacion
+
+        if not cultivo_actual:
+            cultivo_actual = 'Sin plantaciones activas'
+            familia_actual = 'Sin datos'
 
         if grupo_actual_codigo in secuencia:
             idx = secuencia.index(grupo_actual_codigo)
             siguiente_codigo = secuencia[(idx + 1) % len(secuencia)]
         else:
-            siguiente_codigo = 'leguminosa'
+            siguiente_codigo = parcela.siguiente_grupo_recomendado() or 'leguminosa'
 
         siguiente_grupo = mapa_grupos.get(siguiente_codigo, 'Leguminosa')
         sugerencias = sugerencias_por_grupo.get(siguiente_codigo, 'Haba, guisante, judía')
@@ -1639,15 +1816,19 @@ def rotaciones_parcelas(request):
         estado_rotacion = 'ok'
         observacion = 'Rotación correcta.'
 
-        if ultima_rotacion and ultima_rotacion.cultivo_siguiente and plantacion_predominante and plantacion_predominante.cultivo:
+        cultivo_referencia = None
+        if ultima_rotacion:
+            cultivo_referencia = ultima_rotacion.cultivo_siguiente or ultima_rotacion.cultivo_anterior
+
+        if cultivo_referencia and plantacion_predominante and plantacion_predominante.cultivo:
             familia_actual_codigo = plantacion_predominante.cultivo.familia
-            familia_ultima_codigo = ultima_rotacion.cultivo_siguiente.familia
+            familia_ultima_codigo = cultivo_referencia.familia
 
             if familia_actual_codigo == familia_ultima_codigo:
                 estado_rotacion = 'peligro'
                 observacion = 'Se repite la misma familia que en la última rotación registrada.'
                 parcelas_con_aviso += 1
-            elif grupo_actual_codigo == ultima_rotacion.cultivo_siguiente.grupo_rotacion:
+            elif grupo_actual_codigo == cultivo_referencia.grupo_rotacion:
                 estado_rotacion = 'aviso'
                 observacion = 'Se repite el mismo grupo de rotación; conviene revisarlo.'
                 parcelas_con_aviso += 1
@@ -1671,8 +1852,10 @@ def rotaciones_parcelas(request):
         parcelas_resumen.append({
             'parcela': parcela,
             'estado_rotacion': estado_rotacion,
-            'cultivo_predominante': cultivo_predominante,
-            'familia_predominante': familia_predominante,
+            'cultivo_actual': cultivo_actual,
+            'familia_actual': familia_actual,
+            'cultivo_predominante': cultivo_predominante or 'Sin plantaciones',
+            'familia_predominante': familia_predominante or 'Sin familia definida',
             'cultivo_anterior': cultivo_anterior,
             'familia_anterior': familia_anterior,
             'siguiente_grupo': siguiente_grupo,

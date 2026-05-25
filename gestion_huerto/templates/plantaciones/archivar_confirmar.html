@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 40px auto; padding: 24px; background: #fff; border-radius: 18px; box-shadow: 0 15px 40px rgba(0,0,0,.08);">
+    <h1 style="margin-bottom: 20px; color: #2f5d34;">Archivar cultivo</h1>
+    <p style="font-size: 1rem; color: #4a4a4a; margin-bottom: 24px;">
+        Estás a punto de marcar la plantación <strong>{{ plantacion.nombre_completo }}</strong> como <strong>finalizada</strong>.
+        Esto guardará el cultivo en el historial de rotación de la parcela <strong>{{ plantacion.parcela.nombre }}</strong> para que sirva de referencia en futuras rotaciones.
+    </p>
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;">
+            <button type="submit" class="btn-soft btn-soft-primary">Sí, archivar cultivo</button>
+            <a href="{% url 'detalle_plantacion' plantacion.id %}" class="btn-soft btn-soft-dark">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

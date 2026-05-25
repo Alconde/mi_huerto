@@ -1,7 +1,8 @@
 from datetime import timedelta
 from django.utils import timezone
 
-from .models import Plantacion
+from .models import Plantacion, Tarea
+from django.db.models import Q
 
 
 FAMILIAS_SENSIBLES = {
@@ -132,3 +133,64 @@ def buscar_warning_rotacion(plantacion):
         f"En horticultura ecológica conviene dejar más tiempo antes de repetir "
         f"la misma familia para reducir presión de plagas y enfermedades del suelo."
     )
+
+
+
+
+def preparar_resumen_tooltip_plantacion(plantacion, hoy=None):
+    hoy = hoy or timezone.localdate()
+
+    tareas_qs = (
+        Tarea.objects
+        .filter(Q(plantacion=plantacion) | Q(plantaciones=plantacion))
+        .distinct()
+        .order_by('-fecha', '-id')
+    )
+
+    tareas_realizadas = list(
+        tareas_qs.filter(completada=True)[:3]
+    )
+
+    tareas_programadas = list(
+        tareas_qs.filter(completada=False).order_by('fecha_proxima', 'fecha', 'id')[:3]
+    )
+
+    partes_fechas = []
+    if plantacion.fecha_siembra:
+        partes_fechas.append(f"Siembra: {plantacion.fecha_siembra:%d/%m/%Y}")
+    if plantacion.fecha_trasplante:
+        partes_fechas.append(f"Trasplante: {plantacion.fecha_trasplante:%d/%m/%Y}")
+
+    if not partes_fechas:
+        partes_fechas.append("Sin fecha registrada")
+
+    if plantacion.cantidad:
+        cantidad_texto = f"{plantacion.cantidad} plantas"
+    else:
+        cantidad_texto = "Cantidad no indicada"
+
+    realizadas_texto = (
+        " · ".join(
+            f"{t.get_tipo_display()} ({t.fecha:%d/%m})"
+            for t in tareas_realizadas
+        ) or "Sin tareas realizadas"
+    )
+
+    programadas_texto = (
+        " · ".join(
+            f"{t.get_tipo_display()} ({(t.fecha_proxima or t.fecha):%d/%m})"
+            for t in tareas_programadas
+        ) or "Sin tareas programadas"
+    )
+
+    plantacion.tooltip_info = {
+        'titulo': plantacion.nombre_completo,
+        'estado': plantacion.get_estado_display(),
+        'fechas': " | ".join(partes_fechas),
+        'cantidad': cantidad_texto,
+        'riego': getattr(plantacion, 'estado_riego', 'Sin estado de riego'),
+        'realizadas': realizadas_texto,
+        'programadas': programadas_texto,
+    }
+
+    return plantacion

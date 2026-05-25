@@ -15,13 +15,12 @@
             </p>
         </div>
         <div class="d-flex gap-2 align-items-center">
-            <form method="GET" class="d-flex align-items-center bg-white p-2 rounded shadow-sm border me-2">
+            <form method="get" class="d-flex align-items-center bg-white p-2 rounded shadow-sm border me-2">
                 <label class="me-2 small fw-bold text-muted text-uppercase" style="font-size: 0.7rem;">
-                    Año del Cuaderno:
+                    Año del cuaderno:
                 </label>
-                <select name="anio" onchange="this.form.submit()"
-                        class="form-select form-select-sm" style="width: auto;">
-                    <option value="{{ anio_consulta }}">{{ anio_consulta }}</option>
+                <select name="anio" onchange="this.form.submit()" class="form-select form-select-sm" style="width: auto;">
+                    <option value="{{ anioconsulta }}">{{ anioconsulta }}</option>
                 </select>
             </form>
 
@@ -43,12 +42,10 @@
                     <h2 class="h5 mb-0">Información básica</h2>
                 </div>
                 <div class="card-body small">
-                    <p><strong>Tamaño:</strong> {{ parcela.tamano }} m²</p>
-                    <p><strong>Tipo de suelo:</strong> {{ parcela.tipo_suelo|default:"Sin definir" }}</p>
-                    <p><strong>Orientación:</strong> {{ parcela.orientacion|default:"Sin definir" }}</p>
+                    <p><strong>Nombre:</strong> {{ parcela.nombre }}</p>
                     <p><strong>Filas:</strong> {{ parcela.filas }}</p>
                     <p><strong>Columnas:</strong> {{ parcela.columnas }}</p>
-                    <p class="mb-0"><strong>Tipo de tabla:</strong> {{ parcela.get_tipo_tabla_display }}</p>
+                    <p class="mb-0"><strong>Tipo de tabla:</strong> {{ parcela.get_tipotabla_display }}</p>
                 </div>
             </div>
         </div>
@@ -69,6 +66,7 @@
                                         <th>Cultivo</th>
                                         <th>Variedad</th>
                                         <th>Cantidad</th>
+                                        <th>Estado</th>
                                         <th>Posición</th>
                                     </tr>
                                 </thead>
@@ -78,10 +76,11 @@
                                             <td>{{ plantacion.cultivo.nombre }}</td>
                                             <td>{{ plantacion.variedad.nombre|default:"-" }}</td>
                                             <td>{{ plantacion.cantidad|default:"-" }}</td>
+                                            <td>{{ plantacion.get_estado_display }}</td>
                                             <td>
-                                                F{{ plantacion.fila_inicio }}-{{ plantacion.fila_fin }}
+                                                F{{ plantacion.filainicio }}-{{ plantacion.filafin }}
                                                 /
-                                                C{{ plantacion.columna_inicio|add:1 }}-{{ plantacion.columna_fin|add:1 }}
+                                                {{ p_data.cabecera_cols|slice:plantacion.columnainicio|last }}{% if plantacion.columnainicio != plantacion.columnafin %}-{{ p_data.cabecera_cols|slice:plantacion.columnafin|last }}{% endif %}
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -89,7 +88,7 @@
                             </table>
                         </div>
                     {% else %}
-                        <p class="text-muted mb-0">No hay plantaciones registradas en esta parcela para {{ anio_consulta }}.</p>
+                        <p class="text-muted mb-0">No hay plantaciones registradas en esta parcela para {{ anioconsulta }}.</p>
                     {% endif %}
                 </div>
             </div>
@@ -112,21 +111,21 @@
                 </div>
 
                 <!-- Foto general -->
-                {% if p_data.info.foto_general %}
+                {% if p_data.info.fotogeneral %}
                 <div class="card-body bg-light p-3 border-bottom">
                     <div class="text-center">
-                        <img src="{{ p_data.info.foto_general.url }}"
+                        <img src="{{ p_data.info.fotogeneral.url }}"
                              alt="Foto general de {{ p_data.info.nombre }}"
                              class="img-fluid rounded shadow-sm"
                              style="max-height: 200px; cursor: pointer;"
                              data-bs-toggle="modal"
-                             data-bs-target="#fotoModal{{ p_data.info.id }}">
+                             data-bs-target="#fotoModal{{ parcela.id }}">
                         <p class="small text-muted mt-2 mb-0">📸 Foto general de la parcela</p>
                     </div>
                 </div>
                 {% endif %}
 
-                <!-- Malla del huerto (misma lógica que plano.html) -->
+                <!-- Malla -->
                 <div class="card-body bg-light overflow-auto py-4">
                     <table class="mx-auto" style="border-collapse: separate; border-spacing: 4px;">
                         <thead>
@@ -149,38 +148,57 @@
                                 {% for celda in fila_lista %}
                                     {% if celda.existe %}
                                         {% if celda.plantas %}
-                                            <!-- Celda Ocupada -->
-                                            <td class="celda-tierra celda-ocupada {% if celda.plantas.0.color_riego == '#ffff00' or celda.plantas.0.color_riego == '#ff0000' %}celda-necesita-riego{% endif %}"
-                                                style="width: 38px; height: 38px; border-radius: 6px; text-align: center; vertical-align: middle; position: relative;
-                                                       background-color: {{ celda.plantas.0.cultivo.familia_color }} !important; border: 1px solid rgba(0,0,0,0.1);"
+                                            <td class="celda-tierra celda-ocupada {% if celda.plantas.0.colorriego == '#ffff00' or celda.plantas.0.colorriego == '#ff0000' %}celda-necesita-riego{% endif %}"
+                                                style="width: 38px; height: 38px; border-radius: 6px; text-align: center; vertical-align: middle; position: relative; background-color: #{{ celda.plantas.0.cultivo.familiacolor }} !important; border: 1px solid rgba(0,0,0,0.1);"
                                                 data-bs-toggle="tooltip"
                                                 data-bs-placement="top"
-                                                data-color-riego="{{ celda.plantas.0.color_riego }}"
-                                                data-plantaciones="{% for p in celda.plantas %}{{ p.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
-                                                data-plant-names="{% for p in celda.plantas %}{{ p.cultivo.nombre }}{% if not forloop.last %},{% endif %}{% endfor %}"
-                                                title="{% for p in celda.plantas %}{{ p.cultivo.nombre|upper }} &#10;Siembra: {{ p.fecha_siembra|date:'d/m/Y' }} &#10;Trasplante: {{ p.fecha_trasplante|date:'d/m/Y' }} &#10;Cosecha: {{ p.fecha_recoleccion_esperada|date:'d/m/Y' }} &#10;--- TAREAS --- &#10;{% for t in p.tareas.all %}• {{ t.get_tipo_display }} ({{ t.fecha|date:'d/m' }}) &#10;{% empty %}Sin tareas recientes &#10;{% endfor %}{% if not forloop.last %}---------- &#10;{% endif %}{% endfor %}">
+                                                data-color-riego="#{{ celda.plantas.0.colorriego }}"
+                                                title="{% for p in celda.plantas %}{{ p.nombrecompleto|upper }}
+Estado: {{ p.get_estado_display }}
+{% if p.fechasiembra %}Siembra: {{ p.fechasiembra|date:'d/m/Y' }}{% endif %}{% if p.fechasiembra and p.fechatrasplante %} | {% endif %}{% if p.fechatrasplante %}Trasplante: {{ p.fechatrasplante|date:'d/m/Y' }}{% endif %}
+{% if p.fechacosechaestimada %}Cosecha estimada: {{ p.fechacosechaestimada|date:'d/m/Y' }}{% endif %}
+Cantidad: {{ p.cantidad|default:'No indicada' }}
+Riego: {{ p.estadoriego|default:'Sin estado de riego' }}
+--- TAREAS ---
+Realizadas:
+{% for t in p.tareas_realizadas %}
+• {{ t.get_tipo_display }} — {{ t.fecha|date:'d/m/Y' }}
+{% empty %}
+Sin tareas realizadas
+{% endfor %}
 
-                                                {% if celda.plantas.0.color_riego == '#0000ff' %}
+Programadas:
+{% for t in p.tareas_programadas %}
+• {{ t.get_tipo_display }} — {{ t.fecha_proxima|default:t.fecha|date:'d/m/Y' }}
+{% empty %}
+Sin tareas programadas
+{% endfor %}
+{% endfor %}{% if not forloop.last %}
+----------
+{% endif %}{% endfor %}">
+
+                                                {% if celda.plantas.0.colorriego == '0000ff' %}
                                                     <span style="position: absolute; top: 2px; right: 2px; font-size: 0.8rem; z-index: 5;">💧</span>
-                                                {% elif celda.plantas.0.color_riego == '#ffff00' %}
+                                                {% elif celda.plantas.0.colorriego == 'ffff00' %}
                                                     <span style="position: absolute; top: 2px; right: 2px; font-size: 0.8rem; z-index: 5;">⚠️</span>
-                                                {% elif celda.plantas.0.color_riego == '#ff0000' %}
+                                                {% elif celda.plantas.0.colorriego == 'ff0000' %}
                                                     <span style="position: absolute; top: 2px; right: 2px; font-size: 0.8rem; z-index: 5;">🔥</span>
+                                                {% elif celda.plantas.0.colorriego == '6c757d' %}
+                                                    <span style="position: absolute; top: 2px; right: 2px; font-size: 0.8rem; z-index: 5;">🚫</span>
                                                 {% endif %}
 
-                                                <div class="d-flex justify-content-center align-items-center h-100 w-100">
+                                                <a href="{% url 'detalle_plantacion' celda.plantas.0.id %}"
+                                                   class="d-flex justify-content-center align-items-center h-100 w-100 text-decoration-none">
                                                     {% for p in celda.plantas %}
-                                                        <span class="emoji-plantado" style="font-size: 1.2rem; {% if celda.plantas|length > 1 %}margin: -4px; scale: 0.8;{% endif %}">
+                                                        <span class="emoji-plantado" style="font-size: 1.2rem; {% if celda.plantas|length > 1 %}margin: -4px; transform: scale(0.8);{% endif %}">
                                                             {{ p.cultivo.emoji }}
                                                         </span>
                                                     {% endfor %}
-                                                </div>
+                                                </a>
                                             </td>
                                         {% else %}
-                                            <!-- Celda vacía (solo informativa aquí) -->
                                             <td class="celda-tierra celda-vacia"
-                                                style="width: 38px; height: 38px; border-radius: 6px; text-align: center; vertical-align: middle; position: relative;
-                                                       background-color: #a1887f; border: 2px solid rgba(255,255,255,0.3);">
+                                                style="width: 38px; height: 38px; border-radius: 6px; text-align: center; vertical-align: middle; position: relative; background-color: #a1887f; border: 2px solid rgba(255,255,255,0.3);">
                                                 <div class="d-flex justify-content-center align-items-center h-100 w-100 celda-icono">
                                                     <span style="font-size: 1.3rem; opacity: 0; display: none;">➕</span>
                                                 </div>
@@ -196,17 +214,16 @@
                     </table>
                 </div>
             </div>
-
         </div>
 
-        <!-- Leyenda lateral (igual que en plano) -->
+        <!-- Leyenda lateral -->
         <div class="col-md-3">
             <div class="card sticky-top shadow-sm border-0 rounded-4" style="top: 20px;">
                 <div class="card-header bg-success text-white py-3">
-                    <h6 class="mb-0 text-center">📊 Guía de Gestión</h6>
+                    <h6 class="mb-0 text-center">📊 Guía de gestión</h6>
                 </div>
                 <div class="card-body">
-                    <p class="small fw-bold text-muted text-uppercase mb-3" style="font-size: 0.65rem;">Familias Botánicas</p>
+                    <p class="small fw-bold text-muted text-uppercase mb-3" style="font-size: 0.65rem;">Familias botánicas</p>
                     <ul class="list-unstyled mb-4">
                         <li class="d-flex align-items-center mb-2">
                             <div style="width: 18px; height: 18px; background: #a1887f; border: 1px solid #8d6e63; border-radius: 4px;" class="me-2"></div>
@@ -214,13 +231,13 @@
                         </li>
                         {% for familia in leyenda %}
                         <li class="d-flex align-items-center mb-2">
-                            <div style="width: 18px; height: 18px; background-color: {{ familia.color }} !important; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;" class="me-2 shadow-sm"></div>
+                            <div style="width: 18px; height: 18px; background-color: #{{ familia.color }}; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;" class="me-2 shadow-sm"></div>
                             <span class="small">{{ familia.label }}</span>
                         </li>
                         {% endfor %}
                     </ul>
 
-                    <p class="small fw-bold text-muted text-uppercase mb-3" style="font-size: 0.65rem;">Estado de Riego</p>
+                    <p class="small fw-bold text-muted text-uppercase mb-3" style="font-size: 0.65rem;">Estado de riego</p>
                     <div class="mb-4">
                         <div class="d-flex align-items-center mb-2">
                             <span class="me-2">💧</span>
@@ -232,13 +249,17 @@
                         </div>
                         <div class="d-flex align-items-center mb-2">
                             <span class="me-2">🔥</span>
-                            <span class="small">Urgente (&gt;10 días, Seco)</span>
+                            <span class="small">Urgente (&gt; 10 días)</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="me-2">🚫</span>
+                            <span class="small">No requiere riego inicial</span>
                         </div>
                     </div>
 
                     <div class="bg-light p-3 rounded-3 border mb-3">
                         <p class="small mb-0 text-muted">
-                            <strong>Tip:</strong> El plano muestra cultivos vivos. Si plantaste en un año y cosechas en otro, se verá en ambos.
+                            <strong>Tip:</strong> El plano muestra plantaciones activas del año consultado y te permite revisar fechas, cantidad y tareas al pasar el cursor.
                         </p>
                     </div>
                 </div>
@@ -247,16 +268,16 @@
     </div>
 
     <!-- Modal de foto -->
-    {% if p_data.info.foto_general %}
-    <div class="modal fade" id="fotoModal{{ p_data.info.id }}" tabindex="-1" aria-labelledby="fotoModalLabel{{ p_data.info.id }}" aria-hidden="true">
+    {% if p_data.info.fotogeneral %}
+    <div class="modal fade" id="fotoModal{{ parcela.id }}" tabindex="-1" aria-labelledby="fotoModalLabel{{ parcela.id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="fotoModalLabel{{ p_data.info.id }}">Foto general de {{ p_data.info.nombre }}</h5>
+                    <h5 class="modal-title" id="fotoModalLabel{{ parcela.id }}">Foto general de {{ p_data.info.nombre }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img src="{{ p_data.info.foto_general.url }}" alt="Foto general de {{ p_data.info.nombre }}" class="img-fluid rounded">
+                    <img src="{{ p_data.info.fotogeneral.url }}" alt="Foto general de {{ p_data.info.nombre }}" class="img-fluid rounded">
                 </div>
             </div>
         </div>
@@ -290,8 +311,9 @@
     white-space: pre-wrap;
     font-size: 0.85rem;
     border-radius: 10px;
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: rgba(0, 0, 0, 0.92);
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    max-width: 360px;
 }
 .emoji-plantado {
     filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
@@ -300,13 +322,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl, {
             html: false,
             trigger: 'hover'
-        })
-    })
+        });
+    });
 });
 </script>
 {% endblock %}

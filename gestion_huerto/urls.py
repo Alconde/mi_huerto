@@ -25,6 +25,7 @@ urlpatterns = [
     path('plantaciones/nueva/', views.editar_plantacion, name='nueva_plantacion'),
     path('plantaciones/nueva-mapa/<int:parcela_id>/<int:fila>/<int:columna>/', views.nueva_plantacion_mapa, name='nueva_plantacion_mapa'),
     path('plantaciones/<int:plantacion_id>/editar/', views.editar_plantacion, name='editar_plantacion'),
+    path('plantaciones/<int:plantacion_id>/archivar/', views.archivar_plantacion, name='archivar_plantacion'),
     path('plantaciones/<int:plantacion_id>/eliminar/', views.eliminar_plantacion, name='eliminar_plantacion'),
     path('plantaciones/<int:plantacion_id>/', views.detalle_plantacion, name='detalle_plantacion'),    
     path('plantaciones/<int:plantacion_id>/fotos/nueva/', views.agregar_foto_plantacion, name='agregar_foto_plantacion'),
